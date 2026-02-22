@@ -473,13 +473,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410087039}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.4849166, y: 0.34997928, z: -0.2202231, w: 0.770631}
+  m_LocalRotation: {x: 0.85317254, y: -0.142373, z: 0.39883837, w: 0.30455628}
   m_LocalPosition: {x: 0.81, y: 7.286, z: -2.697}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1447649069}
-  m_LocalEulerAnglesHint: {x: 64.36, y: 48.85, z: 0}
+  m_LocalEulerAnglesHint: {x: 140.71, y: -50.11, z: 0}
 --- !u!114 &410087042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -862,22 +862,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3017805951175253400, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_Name
-      value: Mesh
-      objectReference: {fileID: 0}
-    - target: {fileID: 4539555096996547369, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_Name
-      value: DroneView
-      objectReference: {fileID: 0}
-    - target: {fileID: 6255153612944658692, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 1b4a0355e79b4df48864d0a3542ea4e1, type: 2}
-    - target: {fileID: 6593067147204912441, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: 'm_Materials.Array.data[2]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 1b4a0355e79b4df48864d0a3542ea4e1, type: 2}
     - target: {fileID: 7462912387970245473, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
       propertyPath: m_Name
       value: Drone

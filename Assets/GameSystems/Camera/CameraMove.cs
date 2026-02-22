@@ -3,9 +3,9 @@ using UnityEngine;
 public class CameraMove : MonoBehaviour
 {
     public float speed = 5f;
-    public float scrollspeed = 5;
-    public float acceleration = 15f;
-    public Vector2 heightLimit;
+    public float scrollspeed = 1;
+    public float acceleration = 14f;
+    public Vector2 heightLimit = new Vector2(5.0f, 40.0f);
     
     private Vector3 currentVelocity = Vector3.zero;
     
