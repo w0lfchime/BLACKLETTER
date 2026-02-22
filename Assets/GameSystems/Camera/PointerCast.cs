@@ -16,11 +16,11 @@ public class PointerCast : MonoBehaviour
     
     void LateUpdate()
     {
-        if(DroneView.allDrones.Count == 0) 
-        {
-            Debug.LogWarning("allDrones is empty");
-            return;
-        }
+        //if(DroneView.allDrones.Count == 0) 
+        //{
+        //    Debug.LogWarning("allDrones is empty");
+        //    return;
+        //}
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -33,7 +33,7 @@ public class PointerCast : MonoBehaviour
                 //DroneView.allDrones[0].GoToPosition(DroneSpace.GridView.instance.WorldToGrid(hit.point));
             }
 
-            DroneView.allDrones[0].MoveDirection(GetArrowKeyVector());
+            //DroneView.allDrones[0].MoveDirection(GetArrowKeyVector());
         }
     }
 }

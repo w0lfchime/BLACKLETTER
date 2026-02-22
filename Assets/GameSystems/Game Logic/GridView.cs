@@ -231,43 +231,6 @@ namespace BL_Grid
             return new Vector3(x, 0f, z);
         }
 
-        // --- Spawning / occupancy ---
-
-        public bool Spawn(GameObject prefab, Vector3Int position, float heightOffset = 0f)
-        {
-            if (prefab == null) return false;
-
-            position = LoopGridPosition(position);
-            var objIns = Instantiate(prefab, GridToWorld(position) + Vector3.up * heightOffset, Quaternion.identity);
-            AddObject(objIns, position);
-            return true;
-        }
-
-        public bool RemoveObject(GameObject obj, Vector3Int position)
-        {
-            if (obj == null || gridArray == null) return false;
-
-            position = LoopGridPosition(position);
-            if (!InBoundsView(position)) return false;
-
-            return gridArray[position.x, position.z].Remove(obj);
-        }
-
-        public bool AddObject(GameObject obj, Vector3Int position)
-        {
-            if (obj == null || gridArray == null) return false;
-
-            position = LoopGridPosition(position);
-            if (!InBoundsView(position)) return false;
-
-            gridArray[position.x, position.z].Add(obj);
-
-            var gridObject = obj.GetComponent<GridEntity>();
-            if (gridObject != null)
-                gridObject.currentTilePosition = position;
-
-            return true;
-        }
 
         private bool InBoundsView(Vector3Int p)
         {

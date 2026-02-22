@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+
 
 namespace BL_Grid
 {
@@ -27,20 +29,21 @@ namespace BL_Grid
     {
         public static Grid I { get; private set; }
 
+        public List<Drone> Drones = new List<Drone>();
+
         [Header("Grid Size (Backend)")]
-        [SerializeField, Min(1)] private int width = 21;
-        [SerializeField, Min(1)] private int height = 21;
+        [SerializeField, UnityEngine.Range(1, 50)] public int Width = 21;
+        [SerializeField, UnityEngine.Range(1, 50)] public int Height = 21;
 
         [Header("Init Behavior")]
         [SerializeField] private bool initOnAwake = true;
         [SerializeField] private bool rebuildOnValidate = true;
 
-        public int Width => width;
-        public int Height => height;
+    
 
         [SerializeField, HideInInspector] private Tile[] tiles;
 
-        public bool IsReady => tiles != null && tiles.Length == width * height;
+        public bool IsReady => tiles != null && tiles.Length == Width * Height;
 
         private void Awake()
         {
@@ -53,7 +56,7 @@ namespace BL_Grid
             I = this;
 
             if (initOnAwake)
-                Rebuild(width, height);
+                Rebuild(Width, Height);
         }
 
         private void OnDestroy()
@@ -64,13 +67,13 @@ namespace BL_Grid
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            width = Mathf.Max(1, width);
-            height = Mathf.Max(1, height);
+            Width = Mathf.Max(1, Width);
+            Height = Mathf.Max(1, Height);
 
             if (rebuildOnValidate)
             {
                 // In edit mode, keep it synced for debugging.
-                Rebuild(width, height);
+                Rebuild(Width, Height);
                 GridView.I?.Rebuild(force: false);
             }
         }
@@ -81,13 +84,13 @@ namespace BL_Grid
         /// </summary>
         public void Rebuild(int newWidth, int newHeight)
         {
-            width = Mathf.Max(1, newWidth);
-            height = Mathf.Max(1, newHeight);
+            Width = Mathf.Max(1, newWidth);
+            Height = Mathf.Max(1, newHeight);
 
-            tiles = new Tile[width * height];
+            tiles = new Tile[Width * Height];
 
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
+            for (int y = 0; y < Height; y++)
+                for (int x = 0; x < Width; x++)
                     tiles[ToIndex(x, y)] = new Tile(x, y);
         }
 
@@ -109,10 +112,15 @@ namespace BL_Grid
             I.Rebuild(newWidth, newHeight);
         }
 
-        public int ToIndex(int x, int y) => x + y * width;
+
+
+
+
+
+        public int ToIndex(int x, int y) => x + y * Width;
 
         public bool InBounds(int x, int y)
-            => (uint)x < (uint)width && (uint)y < (uint)height;
+            => (uint)x < (uint)Width && (uint)y < (uint)Height;
 
         public Tile Get(int x, int y)
         {
