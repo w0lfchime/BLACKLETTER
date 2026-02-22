@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DroneSpace
+namespace BL_Grid
 {
     public sealed class Tile
     {
@@ -32,10 +32,7 @@ namespace DroneSpace
         [SerializeField, Min(1)] private int height = 21;
 
         [Header("Init Behavior")]
-        [Tooltip("If true, initializes (or rebuilds) the grid in Awake.")]
         [SerializeField] private bool initOnAwake = true;
-
-        [Tooltip("If true, rebuilds the grid whenever width/height change in the inspector (Editor only).")]
         [SerializeField] private bool rebuildOnValidate = true;
 
         public int Width => width;

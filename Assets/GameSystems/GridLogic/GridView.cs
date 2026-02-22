@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-namespace DroneSpace
+namespace BL_Grid
 {
     public sealed class GridView : MonoBehaviour
     {
@@ -262,7 +262,7 @@ namespace DroneSpace
 
             gridArray[position.x, position.z].Add(obj);
 
-            var gridObject = obj.GetComponent<GridObject>();
+            var gridObject = obj.GetComponent<GridEntity>();
             if (gridObject != null)
                 gridObject.currentTilePosition = position;
 

@@ -390,7 +390,7 @@ GameObject:
   - component: {fileID: 2126763710}
   - component: {fileID: 2126763713}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Ornament Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -498,10 +498,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1317702884942036401, guid: 322f6c5877f13954ba09483898996b95, type: 3}
-      propertyPath: m_Camera
-      value: 
-      objectReference: {fileID: 346753012}
     - target: {fileID: 1712048201465859630, guid: 322f6c5877f13954ba09483898996b95, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -510,10 +506,14 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1815778389044312246, guid: 322f6c5877f13954ba09483898996b95, type: 3}
-      propertyPath: executionTarget
-      value: 
-      objectReference: {fileID: 2126763708}
+    - target: {fileID: 1712048201465859630, guid: 322f6c5877f13954ba09483898996b95, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5313063576930323214, guid: 322f6c5877f13954ba09483898996b95, type: 3}
+      propertyPath: m_Value
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5982293479906416084, guid: 322f6c5877f13954ba09483898996b95, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -538,6 +538,14 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6637653068364042805, guid: 322f6c5877f13954ba09483898996b95, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000034213066
+      objectReference: {fileID: 0}
+    - target: {fileID: 6637653068364042805, guid: 322f6c5877f13954ba09483898996b95, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -0.0009270514
+      objectReference: {fileID: 0}
     - target: {fileID: 7592835665041705395, guid: 322f6c5877f13954ba09483898996b95, type: 3}
       propertyPath: m_Name
       value: IDE
@@ -548,6 +556,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8523231638255889483, guid: 322f6c5877f13954ba09483898996b95, type: 3}
       propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8523231638255889483, guid: 322f6c5877f13954ba09483898996b95, type: 3}
+      propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8611813846381846597, guid: 322f6c5877f13954ba09483898996b95, type: 3}
