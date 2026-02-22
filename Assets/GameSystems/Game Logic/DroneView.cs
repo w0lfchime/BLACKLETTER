@@ -3,7 +3,7 @@ using UnityEngine;
 using DG.Tweening;
 using UnityEngine.XR;
 
-public class DroneView : GridObject
+public class DroneView : MonoBehaviour
 {
     public static List<DroneView> allDrones = new List<DroneView>();
     public float speed = 5f;
