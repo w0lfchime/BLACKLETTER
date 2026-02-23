@@ -233,7 +233,7 @@ namespace BL_Grid
 
             float x = (gridPos.x - sx / 2) * positionMultiplier;
             float z = (gridPos.z - sz / 2) * positionMultiplier;
-            return new Vector3(x, 0f, z);
+            return new Vector3(x, gridPos.y, z);
         }
 
 

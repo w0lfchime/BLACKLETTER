@@ -11,17 +11,12 @@ namespace BL_Grid
         East,
         South,
         West
-
     }
 
     public abstract class GridEntity : MonoBehaviour
     {
-        public Vector3Int Position;
-
-        public Grid Grid;
-
-
-
+        public Vector2Int Position;
+        public float height;
 
 
         public void SingleStepInDirection(GridDirection direction, bool wrapAroundEnabled = false) //ignore wrap for now
@@ -32,9 +27,9 @@ namespace BL_Grid
 
 
         //function 
-        public Vector3Int QueryPosition(Vector2Int Query, bool wrapAroundEnabled = false)
+        public Vector2Int QueryPosition(Vector2Int Query, bool wrapAroundEnabled = false)
         {
-            Vector3Int position = this.Position;
+            Vector2Int position = this.Position;
 
             if (!wrapAroundEnabled)
             {
@@ -48,6 +43,14 @@ namespace BL_Grid
             return position;
         }
 
+        public static Vector2Int GetDirectionVector(GridDirection direction) => direction switch
+        {
+            GridDirection.North => new Vector2Int(0, 1),
+            GridDirection.East => new Vector2Int(1, 0),
+            GridDirection.South => new Vector2Int(0, -1),
+            GridDirection.West => new Vector2Int(-1, 0),
+            _ => Vector2Int.zero
+        };
 
     }
 }

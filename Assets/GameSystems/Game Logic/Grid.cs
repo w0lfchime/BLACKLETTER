@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Video;
 
 
 namespace BL_Grid
 {
     public sealed class Tile
     {
-        public readonly int x;
-        public readonly int y;
+        public readonly Vector2Int Coordinates;
 
         // fields (expand as needed)
         public byte type;   
@@ -15,13 +15,12 @@ namespace BL_Grid
 
         public Tile(int x, int y)
         {
-            this.x = x;
-            this.y = y;
+            this.Coordinates = new Vector2Int(x, y);
             type = 0;
             flags = 0;
         }
 
-        public override string ToString() => $"Tile({x},{y}) type={type}";
+        public override string ToString() => $"Tile({Coordinates.x},{Coordinates.y}) type={type}";
     }
 
 
@@ -112,6 +111,12 @@ namespace BL_Grid
             I.Rebuild(newWidth, newHeight);
         }
 
+        public void AddDrone(Drone drone)
+        {
+            Drones.Add(drone);
+            drone.Position = new Vector2Int(Width / 2, Height / 2);
+        }
+
 
 
 
@@ -137,5 +142,13 @@ namespace BL_Grid
         }
 
         public Tile[] RawTiles => tiles;
+
+
+        public Vector2Int WrapPosition(Vector2Int position)
+        {
+            int x = (position.x % Width + Width) % Width;
+            int y = (position.y % Height + Height) % Height;
+            return new Vector2Int(x, y);
+        }
     }
 }

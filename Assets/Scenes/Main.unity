@@ -503,6 +503,11 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
+--- !u!4 &584885302 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4003788502281768819, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+  m_PrefabInstance: {fileID: 623193776842498377}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &625149088
 GameObject:
   m_ObjectHideFlags: 0
@@ -579,6 +584,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mouseObject: {fileID: 0}
+  delay: 0.5
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -810,6 +816,27 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   cornerOffset: {x: -0.5, y: 0}
+--- !u!1 &2126164615 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4539555096996547369, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+  m_PrefabInstance: {fileID: 623193776842498377}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2126164617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126164615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ea20c7f8e515724fb04fd85c6e177b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MeshTransform: {fileID: 584885302}
+  hoverAmount: 0.09
+  hoverSpeed: 1
+  tiltAngle: 10
 --- !u!4 &609835413337739538 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
@@ -883,6 +910,14 @@ PrefabInstance:
       propertyPath: Grid
       value: 
       objectReference: {fileID: 1144014721}
+    - target: {fileID: 7245006551204057223, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+      propertyPath: View
+      value: 
+      objectReference: {fileID: 2126164617}
+    - target: {fileID: 7245006551204057223, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+      propertyPath: height
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 7462912387970245473, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
       propertyPath: m_Name
       value: Drone
@@ -890,7 +925,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4539555096996547369, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2126164617}
   m_SourcePrefab: {fileID: 100100000, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

@@ -1,17 +1,20 @@
+using BL_Grid;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class PointerCast : MonoBehaviour
 {
     public Transform mouseObject;
+    public float delay = .5f;
+    float timer = 0f;
     
-    public static Vector2 GetArrowKeyVector()
+    public static GridDirection GetArrowKeyVector()
     {
-        Vector2 input = Vector2.zero;
-        if (Input.GetKey(KeyCode.UpArrow)) input.y += 1;
-        if (Input.GetKey(KeyCode.DownArrow)) input.y -= 1;
-        if (Input.GetKey(KeyCode.RightArrow)) input.x += 1;
-        if (Input.GetKey(KeyCode.LeftArrow)) input.x -= 1;
-        return input;
+        if (Input.GetKey(KeyCode.UpArrow)) return GridDirection.North;
+        if (Input.GetKey(KeyCode.DownArrow)) return GridDirection.South;
+        if (Input.GetKey(KeyCode.RightArrow)) return GridDirection.East;
+        if (Input.GetKey(KeyCode.LeftArrow)) return GridDirection.West;
+        return GridDirection.Null;
     }
     
     void LateUpdate()
@@ -30,10 +33,23 @@ public class PointerCast : MonoBehaviour
 
             if(Input.GetMouseButton(0))
             {
-                //DroneView.allDrones[0].GoToPosition(DroneSpace.GridView.instance.WorldToGrid(hit.point));
+                //BL_Grid.Grid.I.Drones[0].SingleStepInDirection(GetArrowKeyVector(), 0.5f);
             }
 
             //DroneView.allDrones[0].MoveDirection(GetArrowKeyVector());
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if(GetArrowKeyVector() != GridDirection.Null)
+        {
+            timer += Time.fixedDeltaTime;
+            if(timer >= delay)
+            {
+                BL_Grid.Grid.I.Drones[0].SingleStepInDirection(GetArrowKeyVector(), delay);
+                timer = 0f;
+            }
         }
     }
 }
