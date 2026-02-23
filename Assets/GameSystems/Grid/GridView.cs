@@ -108,7 +108,12 @@ namespace BL_Grid
             for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
                 if (mats[sub] != null)
                     for (int i = 0; i < count; i += 1023)
-                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], matrices, Mathf.Min(1023, count - i), propertyBlock);
+                    {
+                        int batchSize = Mathf.Min(1023, count - i);
+                        Matrix4x4[] batchMatrices = new Matrix4x4[batchSize];
+                        System.Array.Copy(matrices, i, batchMatrices, 0, batchSize);
+                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchMatrices, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
+                    }
         }
 
         public void Rebuild(bool force = false)
