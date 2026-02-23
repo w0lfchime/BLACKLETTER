@@ -473,13 +473,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410087039}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.4849166, y: 0.34997928, z: -0.2202231, w: 0.770631}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0.81, y: 7.286, z: -2.697}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1447649069}
-  m_LocalEulerAnglesHint: {x: 64.36, y: 48.85, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &410087042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -701,11 +701,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1144014718}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6be00bf37bee8314a8b6f5ad3bf3fc25, type: 3}
+  m_Script: {fileID: 11500000, guid: d685dfbf74641e64b935332db2fbd623, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 5
-  height: 5
+  Drones: []
+  Width: 21
+  Height: 21
   initOnAwake: 1
   rebuildOnValidate: 1
 --- !u!1 &1447649068
@@ -878,6 +879,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
       objectReference: {fileID: 2100000, guid: 1b4a0355e79b4df48864d0a3542ea4e1, type: 2}
+    - target: {fileID: 7245006551204057223, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+      propertyPath: Grid
+      value: 
+      objectReference: {fileID: 1144014721}
     - target: {fileID: 7462912387970245473, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
       propertyPath: m_Name
       value: Drone
