@@ -5,7 +5,7 @@ using DG.Tweening;
 namespace BL_Grid
 {
 
-    public class Drone : GridEntity
+    public class Hub : GridEntity
     {
         public void SingleStepInDirection(GridDirection direction, float time = 0f, bool wrapAroundEnabled = false) //ignore wrap for now
         {

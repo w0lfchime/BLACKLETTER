@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Xml;
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -26,6 +27,7 @@ namespace BL_Grid
 
     public sealed class Grid : MonoBehaviour
     {
+        public GameObject Drone, Hub;
         public static Grid I { get; private set; }
 
         public List<Drone> Drones = new List<Drone>();
@@ -111,10 +113,17 @@ namespace BL_Grid
             I.Rebuild(newWidth, newHeight);
         }
 
-        public void AddDrone(Drone drone)
+        public GameObject SpawnEntity(GameObject entity, Vector2Int position)
         {
-            Drones.Add(drone);
-            drone.Position = new Vector2Int(Width / 2, Height / 2);
+            GameObject spawnIns = Instantiate(entity, transform.parent);
+            spawnIns.GetComponent<GridEntity>().Position = position;
+            return spawnIns;
+        }
+
+        void Start()
+        {
+            Drones.Add(SpawnEntity(Drone, new Vector2Int(Width / 2, Height / 2)).GetComponent<Drone>());
+            SpawnEntity(Hub, new Vector2Int(Width / 2, Height / 2));
         }
 
 

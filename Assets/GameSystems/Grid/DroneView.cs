@@ -4,11 +4,8 @@ using DG.Tweening;
 using UnityEngine.XR;
 using BL_Grid;
 
-public class DroneView : MonoBehaviour
+public class DroneView : ViewEntity
 {
-
-
-    public Transform MeshTransform; //dragged in, child transform of the in game mesh
 
     [Header("Hover Noise")]
     [SerializeField] private float hoverAmount = 0.03f;
@@ -42,7 +39,7 @@ public class DroneView : MonoBehaviour
 
     [SerializeField] private float tiltAngle = 10f;
 
-    public void GoToPosition(Vector3Int gridPosition, float time = 0f)
+    public override void GoToPosition(Vector3Int gridPosition, float time = 0f)
     {
         Vector3 worldPosition = GridView.I.GridToWorld(gridPosition);
         if (time <= 0f)

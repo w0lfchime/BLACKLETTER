@@ -357,7 +357,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4003788502281768819}
   m_Layer: 0
-  m_Name: MeshScale
+  m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -392,8 +392,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 368943937743197064}
+  - component: {fileID: 4207623673731210006}
   m_Layer: 0
-  m_Name: DroneView
+  m_Name: View
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -415,6 +416,22 @@ Transform:
   - {fileID: 3303971212418903848}
   m_Father: {fileID: 58711051375308891}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4207623673731210006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3161670683134345723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ea20c7f8e515724fb04fd85c6e177b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MeshTransform: {fileID: 4003788502281768819}
+  hoverAmount: 0.09
+  hoverSpeed: 1
+  tiltAngle: 10
 --- !u!1 &4413585372905888413
 GameObject:
   m_ObjectHideFlags: 0
@@ -511,7 +528,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3303971212418903848}
   m_Layer: 0
-  m_Name: Mesh
+  m_Name: Offset
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -578,5 +595,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e31670588c7882f45b37d45462039512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Position: {x: 0, y: 0, z: 0}
-  Grid: {fileID: 0}
+  View: {fileID: 4207623673731210006}
+  Position: {x: 0, y: 0}
+  height: 2
+  stackable: 0

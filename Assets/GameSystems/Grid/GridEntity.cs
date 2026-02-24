@@ -15,13 +15,20 @@ namespace BL_Grid
 
     public abstract class GridEntity : MonoBehaviour
     {
+        public ViewEntity View;
         public Vector2Int Position;
         public float height;
+        public bool stackable = false;
 
 
         public void SingleStepInDirection(GridDirection direction, bool wrapAroundEnabled = false) //ignore wrap for now
         {
 
+        }
+
+        void Start()
+        {
+            View.GoToPosition(new Vector3Int(Position.x, (int)height, Position.y), 0f);
         }
 
 

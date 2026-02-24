@@ -378,8 +378,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c66709fee8e3eb42befdd51d286b849, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
-  scrollspeed: 1
+  speed: 15
+  scrollspeed: 5
   acceleration: 14
   heightLimit: {x: 5, y: 40}
 --- !u!1 &410087039
@@ -503,11 +503,6 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
---- !u!4 &584885302 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4003788502281768819, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-  m_PrefabInstance: {fileID: 623193776842498377}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &625149088
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,6 +705,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d685dfbf74641e64b935332db2fbd623, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Drone: {fileID: 7462912387970245473, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
+  Hub: {fileID: 3491106165475578014, guid: 55bbea8bb01c4e14b93b015b4fe41e60, type: 3}
   Drones: []
   Width: 21
   Height: 21
@@ -744,7 +741,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 609835413337739538}
   - {fileID: 1144014720}
   - {fileID: 242992468}
   - {fileID: 832575519}
@@ -816,120 +812,6 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   cornerOffset: {x: -0.5, y: 0}
---- !u!1 &2126164615 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4539555096996547369, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-  m_PrefabInstance: {fileID: 623193776842498377}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &2126164617
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2126164615}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ea20c7f8e515724fb04fd85c6e177b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  MeshTransform: {fileID: 584885302}
-  hoverAmount: 0.09
-  hoverSpeed: 1
-  tiltAngle: 10
---- !u!4 &609835413337739538 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-  m_PrefabInstance: {fileID: 623193776842498377}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &623193776842498377
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1447649069}
-    m_Modifications:
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 58711051375308891, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3017805951175253400, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_Name
-      value: Mesh
-      objectReference: {fileID: 0}
-    - target: {fileID: 4539555096996547369, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_Name
-      value: DroneView
-      objectReference: {fileID: 0}
-    - target: {fileID: 6255153612944658692, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 1b4a0355e79b4df48864d0a3542ea4e1, type: 2}
-    - target: {fileID: 6593067147204912441, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: 'm_Materials.Array.data[2]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 1b4a0355e79b4df48864d0a3542ea4e1, type: 2}
-    - target: {fileID: 7245006551204057223, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: Grid
-      value: 
-      objectReference: {fileID: 1144014721}
-    - target: {fileID: 7245006551204057223, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: View
-      value: 
-      objectReference: {fileID: 2126164617}
-    - target: {fileID: 7245006551204057223, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: height
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7462912387970245473, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      propertyPath: m_Name
-      value: Drone
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 4539555096996547369, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2126164617}
-  m_SourcePrefab: {fileID: 100100000, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
