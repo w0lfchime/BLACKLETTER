@@ -596,6 +596,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   View: {fileID: 4207623673731210006}
-  Position: {x: 0, y: 0}
-  height: 2
-  stackable: 0
+  Data:
+    Position: {x: 0, y: 0}
+    Height: 2
+    Stackable: 0

@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 using UnityEngineInternal;
 
 
@@ -13,12 +15,22 @@ namespace BL_Grid
         West
     }
 
+    [Serializable]
+    public class GridEntityData
+    {
+        public Vector2Int Position;
+        public float Height;
+        public bool Stackable;
+
+        //visual stuff
+        public Mesh mesh;
+        public Scale scale;
+    }
+
     public abstract class GridEntity : MonoBehaviour
     {
         public ViewEntity View;
-        public Vector2Int Position;
-        public float height;
-        public bool stackable = false;
+        public GridEntityData Data;
 
 
         public void SingleStepInDirection(GridDirection direction, bool wrapAroundEnabled = false) //ignore wrap for now
@@ -28,26 +40,7 @@ namespace BL_Grid
 
         void Start()
         {
-            View.GoToPosition(new Vector3Int(Position.x, (int)height, Position.y), 0f);
-        }
-
-
-
-        //function 
-        public Vector2Int QueryPosition(Vector2Int Query, bool wrapAroundEnabled = false)
-        {
-            Vector2Int position = this.Position;
-
-            if (!wrapAroundEnabled)
-            {
-
-            } 
-            else
-            {
-
-            }
-
-            return position;
+            View.GoToPosition(new Vector3Int(Data.Position.x, (int)Data.Height, Data.Position.y), 0f);
         }
 
         public static Vector2Int GetDirectionVector(GridDirection direction) => direction switch

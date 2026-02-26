@@ -7,14 +7,7 @@ namespace BL_Grid
 
     public class Hub : GridEntity
     {
-        public void SingleStepInDirection(GridDirection direction, float time = 0f, bool wrapAroundEnabled = false) //ignore wrap for now
-        {
-            Vector2Int newPosition = Position + GetDirectionVector(direction);
-            newPosition = Grid.I.WrapPosition(newPosition);
-            View.GoToPosition(new Vector3Int(newPosition.x, (int)height, newPosition.y), time);
-
-            Position = newPosition;
-        }
+        
 
     }
 }

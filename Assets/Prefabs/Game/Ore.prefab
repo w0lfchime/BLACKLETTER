@@ -26,13 +26,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2784066301099802323}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -1, z: 0}
-  m_LocalScale: {x: 40, y: 40, z: 40}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4304020404089674158}
-  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &6924252368365084384
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -40,7 +40,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2784066301099802323}
-  m_Mesh: {fileID: -8907757473011522176, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &6186582075995089341
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -64,8 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2403910971166736460, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
-  - {fileID: 7957322299286140177, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -96,9 +95,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8450162675923712223}
-  - component: {fileID: 7912746698337021829}
+  - component: {fileID: 7632888498841421885}
   m_Layer: 0
-  m_Name: Hub
+  m_Name: Ore
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -120,7 +119,7 @@ Transform:
   - {fileID: 7249451703159972149}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7912746698337021829
+--- !u!114 &7632888498841421885
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -129,7 +128,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3491106165475578014}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a23ea8c9bd42d342a1fd7943cbaaa6f, type: 3}
+  m_Script: {fileID: 11500000, guid: 1ad1483ed1fde4040abf6f7db7874f7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   View: {fileID: 8558815051125479803}

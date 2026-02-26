@@ -9,11 +9,11 @@ namespace BL_Grid
     {
         public void SingleStepInDirection(GridDirection direction, float time = 0f, bool wrapAroundEnabled = false) //ignore wrap for now
         {
-            Vector2Int newPosition = Position + GetDirectionVector(direction);
+            Vector2Int newPosition = Data.Position + GetDirectionVector(direction);
             newPosition = Grid.I.WrapPosition(newPosition);
-            View.GoToPosition(new Vector3Int(newPosition.x, (int)height, newPosition.y), time);
+            View.GoToPosition(new Vector3Int(newPosition.x, (int)Data.Height, newPosition.y), time);
 
-            Position = newPosition;
+            Data.Position = newPosition;
         }
 
     }
