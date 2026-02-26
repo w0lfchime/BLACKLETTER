@@ -38,8 +38,25 @@ namespace BL_Grid
         private float[] tileAnim, wallAnim, cornerAnim;
         private Vector3[] tilePos;
         private int tileCount, wallCount, cornerCount, prevSx, prevSz;
+        private bool tileAnimDone, wallAnimDone, cornerAnimDone;
+        
+        // Reusable batch buffer (avoids allocating every frame)
+        private Matrix4x4[] batchBuffer = new Matrix4x4[1023];
+
+        // Visible grid range (computed from camera each frame)
+        private int visMinX, visMaxX, visMinZ, visMaxZ;
+        // Tile index lookup: tileIndex[x,z] gives index into tileMatrices
+        private int[,] tileIndex;
+
+        // Entity rendering cache
+        private bool entitiesDirty = true;
+        private Dictionary<int, List<Matrix4x4>> entityGroups = new Dictionary<int, List<Matrix4x4>>();
+        private Vector3 lastCamPos;
+        private Quaternion lastCamRot;
         
         private MaterialPropertyBlock propertyBlock;
+
+        public void MarkEntitiesDirty() => entitiesDirty = true;
 
         public int SizeX => Grid.I != null ? Grid.I.Width : 0;
         public int SizeZ => Grid.I != null ? Grid.I.Height : 0; // backend Height maps to view Z
@@ -80,25 +97,37 @@ namespace BL_Grid
             // Animate tiles
             if (tileMesh != null && tileMaterials?.Length > 0 && tileMatrices != null)
             {
-                for (int i = 0; i < tileCount; i++)
+                ComputeVisibleRange();
+
+                if (!tileAnimDone)
                 {
-                    tileAnim[i] = Mathf.MoveTowards(tileAnim[i], 1f, dt * speed);
-                    tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs * DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(tileAnim[i]), animEase));
+                    bool allDone = true;
+                    for (int i = 0; i < tileCount; i++)
+                    {
+                        if (tileAnim[i] >= 1f) continue;
+                        tileAnim[i] = Mathf.MoveTowards(tileAnim[i], 1f, dt * speed);
+                        float t = Mathf.Clamp01(tileAnim[i]);
+                        tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs * DOVirtual.EasedValue(0f, 1f, t, animEase));
+                        if (t < 1f) allDone = false;
+                    }
+                    if (allDone) { tileAnimDone = true; entitiesDirty = true; }
                 }
-                DrawInstanced(tileMesh, tileMaterials, tileMatrices, tileCount);
+
+                // Draw only visible tiles
+                DrawVisibleTiles(tileMesh, tileMaterials);
             }
 
             // Animate walls
             if (wallMesh != null && wallMaterials?.Length > 0 && wallMatrices != null)
             {
-                UpdateWalls(dt, speed, bs, br);
+                if (!wallAnimDone) UpdateWalls(dt, speed, bs, br);
                 DrawInstanced(wallMesh, wallMaterials, wallMatrices, wallCount);
             }
 
             // Animate corners
             if (cornerMesh != null && cornerMaterials?.Length > 0 && cornerMatrices != null)
             {
-                UpdateCorners(dt, speed, bs, br);
+                if (!cornerAnimDone) UpdateCorners(dt, speed, bs, br);
                 DrawInstanced(cornerMesh, cornerMaterials, cornerMatrices, cornerCount);
             }
 
@@ -113,60 +142,163 @@ namespace BL_Grid
                     for (int i = 0; i < count; i += 1023)
                     {
                         int batchSize = Mathf.Min(1023, count - i);
-                        Matrix4x4[] batchMatrices = new Matrix4x4[batchSize];
-                        System.Array.Copy(matrices, i, batchMatrices, 0, batchSize);
-                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchMatrices, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
+                        System.Array.Copy(matrices, i, batchBuffer, 0, batchSize);
+                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
                     }
+        }
+
+        private void ComputeVisibleRange()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) { visMinX = 0; visMaxX = SizeX - 1; visMinZ = 0; visMaxZ = SizeZ - 1; return; }
+
+            int sx = SizeX, sz = SizeZ;
+            float minGx = float.MaxValue, maxGx = float.MinValue;
+            float minGz = float.MaxValue, maxGz = float.MinValue;
+
+            // Cast viewport corners onto the grid plane (y=0)
+            Vector3[] corners = new Vector3[4];
+            corners[0] = new Vector3(0, 0, 0); // bottom-left
+            corners[1] = new Vector3(1, 0, 0); // bottom-right
+            corners[2] = new Vector3(0, 1, 0); // top-left
+            corners[3] = new Vector3(1, 1, 0); // top-right
+
+            for (int i = 0; i < 4; i++)
+            {
+                Ray ray = cam.ViewportPointToRay(corners[i]);
+                // Intersect with y=0 plane
+                if (Mathf.Abs(ray.direction.y) > 0.0001f)
+                {
+                    float t = -ray.origin.y / ray.direction.y;
+                    if (t > 0)
+                    {
+                        Vector3 hit = ray.origin + ray.direction * t;
+                        float gx = hit.x / positionMultiplier + sx / 2f;
+                        float gz = hit.z / positionMultiplier + sz / 2f;
+                        minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
+                        minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
+                    }
+                    else
+                    {
+                        // Ray points away from plane, use far distance along ray projected to plane
+                        float tFar = (cam.farClipPlane - ray.origin.y) / ray.direction.y;
+                        Vector3 hit = ray.origin + ray.direction * Mathf.Abs(tFar);
+                        float gx = hit.x / positionMultiplier + sx / 2f;
+                        float gz = hit.z / positionMultiplier + sz / 2f;
+                        minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
+                        minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
+                    }
+                }
+                else
+                {
+                    // Ray is parallel to ground — camera sees to horizon, render all
+                    minGx = 0; maxGx = sx; minGz = 0; maxGz = sz;
+                }
+            }
+
+            // Pad by 1 tile to avoid popping at edges
+            visMinX = Mathf.Max(0, Mathf.FloorToInt(minGx) - 1);
+            visMaxX = Mathf.Min(sx - 1, Mathf.CeilToInt(maxGx) + 1);
+            visMinZ = Mathf.Max(0, Mathf.FloorToInt(minGz) - 1);
+            visMaxZ = Mathf.Min(sz - 1, Mathf.CeilToInt(maxGz) + 1);
+        }
+
+        private void DrawVisibleTiles(Mesh mesh, Material[] mats)
+        {
+            int batchCount = 0;
+            for (int x = visMinX; x <= visMaxX; x++)
+            {
+                for (int z = visMinZ; z <= visMaxZ; z++)
+                {
+                    batchBuffer[batchCount++] = tileMatrices[tileIndex[x, z]];
+                    if (batchCount == 1023)
+                    {
+                        for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
+                            if (mats[sub] != null)
+                                Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchCount, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
+                        batchCount = 0;
+                    }
+                }
+            }
+            if (batchCount > 0)
+            {
+                for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
+                    if (mats[sub] != null)
+                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchCount, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
+            }
         }
 
         private void DrawEntities()
         {
             if (Grid.I == null || Grid.I.entities == null) return;
-            int sx = SizeX, sz = SizeZ;
 
-            // Group entities by visual data index for batching
-            var groups = new Dictionary<int, List<Matrix4x4>>();
-
-            foreach (var entity in Grid.I.entities)
+            // Check if camera moved
+            Camera cam = Camera.main;
+            if (cam != null && (cam.transform.position != lastCamPos || cam.transform.rotation != lastCamRot))
             {
-                GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
-                if (data.mesh == null || data.materials == null || data.materials.Length == 0) continue;
+                lastCamPos = cam.transform.position;
+                lastCamRot = cam.transform.rotation;
+                entitiesDirty = true;
+            }
 
-                // Match entity to its tile's animation progress
-                float animT = 1f;
-                int ex = entity.Position.x, ez = entity.Position.y;
-                if (tileAnim != null && ex >= 0 && ex < sx && ez >= 0 && ez < sz)
+            // Rebuild cache only when entities change or animation is still running
+            if (entitiesDirty || !tileAnimDone)
+            {
+                int sx = SizeX, sz = SizeZ;
+
+                // Clear lists but keep the dictionary to avoid re-allocating
+                foreach (var list in entityGroups.Values) list.Clear();
+
+                foreach (var entity in Grid.I.entities)
                 {
-                    int tileIdx = ex * sz + ez;
-                    animT = DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(tileAnim[tileIdx]), animEase);
+                    GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
+                    if (data.mesh == null || data.materials == null || data.materials.Length == 0) continue;
+
+                    // Skip entities outside visible range
+                    int ex = entity.Position.x, ez = entity.Position.y;
+                    if (ex < visMinX || ex > visMaxX || ez < visMinZ || ez > visMaxZ) continue;
+
+                    Vector3 worldPos = GridToWorld(new Vector3(entity.Position.x, data.Height, entity.Position.y));
+
+                    // Match entity to its tile's animation progress
+                    float animT = 1f;
+                    if (!tileAnimDone && tileAnim != null && ex >= 0 && ex < sx && ez >= 0 && ez < sz)
+                    {
+                        int tileIdx = tileIndex[ex, ez];
+                        animT = DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(tileAnim[tileIdx]), animEase);
+                    }
+
+                    Vector3 scale = Vector3.one * data.scale * animT;
+                    float hash = Mathf.Abs((Mathf.Sin(entity.Position.x * 127.1f + entity.Position.y * 311.7f) * 43758.5453f) % 1f);
+                    Quaternion rot = Quaternion.Euler(data.rotation) * (data.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
+                    Matrix4x4 matrix = Matrix4x4.TRS(worldPos, rot, scale * positionMultiplier);
+
+                    if (!entityGroups.TryGetValue(entity.visualDataIndex, out var list))
+                    {
+                        list = new List<Matrix4x4>();
+                        entityGroups[entity.visualDataIndex] = list;
+                    }
+                    list.Add(matrix);
                 }
 
-                Vector3 worldPos = GridToWorld(new Vector3(entity.Position.x, data.Height, entity.Position.y));
-                Vector3 scale = Vector3.one * data.scale * animT;
-                float hash = Mathf.Abs((Mathf.Sin(entity.Position.x * 127.1f + entity.Position.y * 311.7f) * 43758.5453f) % 1f);
-                Quaternion rot = Quaternion.Euler(data.rotation) * (data.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
-                Matrix4x4 matrix = Matrix4x4.TRS(worldPos, rot, scale * positionMultiplier);
-
-                if (!groups.ContainsKey(entity.visualDataIndex))
-                    groups[entity.visualDataIndex] = new List<Matrix4x4>();
-                groups[entity.visualDataIndex].Add(matrix);
+                entitiesDirty = false;
             }
 
             // Draw each group with its own materials
-            foreach (var kvp in groups)
+            foreach (var kvp in entityGroups)
             {
+                if (kvp.Value.Count == 0) continue;
                 GridVisualData data = RendererDictionary.visualDataArray[kvp.Key];
-                var matrices = kvp.Value.ToArray();
+                var matrices = kvp.Value;
 
                 for (int sub = 0; sub < data.mesh.subMeshCount && sub < data.materials.Length; sub++)
                 {
                     if (data.materials[sub] == null) continue;
-                    for (int i = 0; i < matrices.Length; i += 1023)
+                    for (int i = 0; i < matrices.Count; i += 1023)
                     {
-                        int batchSize = Mathf.Min(1023, matrices.Length - i);
-                        Matrix4x4[] batch = new Matrix4x4[batchSize];
-                        System.Array.Copy(matrices, i, batch, 0, batchSize);
-                        Graphics.DrawMeshInstanced(data.mesh, sub, data.materials[sub], batch, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
+                        int batchSize = Mathf.Min(1023, matrices.Count - i);
+                        for (int j = 0; j < batchSize; j++) batchBuffer[j] = matrices[i + j];
+                        Graphics.DrawMeshInstanced(data.mesh, sub, data.materials[sub], batchBuffer, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
                     }
                 }
             }
@@ -183,22 +315,29 @@ namespace BL_Grid
             Vector3 sv = Vector3.one * tileScale * positionMultiplier;
             Quaternion br = Quaternion.Euler(tileRotation);
 
-            // Main grid tiles - wave from center
+            // Main grid tiles
             gridArray = new List<GameObject>[sx, sz];
             float[] oldAnim = tileAnim;
             tileMatrices = new Matrix4x4[n];
             tilePos = new Vector3[n];
             tileAnim = new float[n];
+            tileIndex = new int[sx, sz];
             tileCount = n;
+            tileAnimDone = false;
+            wallAnimDone = false;
+            cornerAnimDone = false;
+            entitiesDirty = true;
 
             float cx = (sx - 1) / 2f, cz = (sz - 1) / 2f;
             float maxDist = Mathf.Sqrt(cx * cx + cz * cz);
+
             int idx = 0;
             for (int x = 0; x < sx; x++)
             {
                 for (int z = 0; z < sz; z++)
                 {
                     gridArray[x, z] = new List<GameObject>();
+                    tileIndex[x, z] = idx;
                     Vector3 p = GridToWorld(new Vector3Int(x, 0, z));
                     tilePos[idx] = p;
                     float dist = Mathf.Sqrt((x - cx) * (x - cx) + (z - cz) * (z - cz));
@@ -225,23 +364,36 @@ namespace BL_Grid
         {
             int sx = SizeX, sz = SizeZ;
             float hx = sx / 2f, hz = sz / 2f, pm = positionMultiplier, wd = wallOffset.y;
+            Quaternion r180 = br * Quaternion.Euler(0, 0, 180);
+            Quaternion rN90 = br * Quaternion.Euler(0, 0, -90);
+            Quaternion rP90 = br * Quaternion.Euler(0, 0, 90);
+            bool allDone = true;
             int w = 0;
             for (int i = 0; i < sx; i++)
             {
                 float x = (i - hx + 0.5f) * pm;
                 wallAnim[w] = Mathf.MoveTowards(wallAnim[w], 1f, dt * speed);
-                wallMatrices[w++] = Matrix4x4.TRS(new Vector3(x, wallOffset.x, (-hz - 0.5f - wd) * pm), br * Quaternion.Euler(0, 0, 180), bs * DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(wallAnim[w - 1]), animEase));
+                float t0 = Mathf.Clamp01(wallAnim[w]);
+                wallMatrices[w++] = Matrix4x4.TRS(new Vector3(x, wallOffset.x, (-hz - 0.5f - wd) * pm), r180, bs * DOVirtual.EasedValue(0f, 1f, t0, animEase));
+                if (t0 < 1f) allDone = false;
                 wallAnim[w] = Mathf.MoveTowards(wallAnim[w], 1f, dt * speed);
-                wallMatrices[w++] = Matrix4x4.TRS(new Vector3(x, wallOffset.x, (hz + 0.5f + wd) * pm), br, bs * DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(wallAnim[w - 1]), animEase));
+                float t1 = Mathf.Clamp01(wallAnim[w]);
+                wallMatrices[w++] = Matrix4x4.TRS(new Vector3(x, wallOffset.x, (hz + 0.5f + wd) * pm), br, bs * DOVirtual.EasedValue(0f, 1f, t1, animEase));
+                if (t1 < 1f) allDone = false;
             }
             for (int i = 0; i < sz; i++)
             {
                 float z = (i - hz + 0.5f) * pm;
                 wallAnim[w] = Mathf.MoveTowards(wallAnim[w], 1f, dt * speed);
-                wallMatrices[w++] = Matrix4x4.TRS(new Vector3((-hx - 0.5f - wd) * pm, wallOffset.x, z), br * Quaternion.Euler(0, 0, -90), bs * DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(wallAnim[w - 1]), animEase));
+                float t0 = Mathf.Clamp01(wallAnim[w]);
+                wallMatrices[w++] = Matrix4x4.TRS(new Vector3((-hx - 0.5f - wd) * pm, wallOffset.x, z), rN90, bs * DOVirtual.EasedValue(0f, 1f, t0, animEase));
+                if (t0 < 1f) allDone = false;
                 wallAnim[w] = Mathf.MoveTowards(wallAnim[w], 1f, dt * speed);
-                wallMatrices[w++] = Matrix4x4.TRS(new Vector3((hx + 0.5f + wd) * pm, wallOffset.x, z), br * Quaternion.Euler(0, 0, 90), bs * DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(wallAnim[w - 1]), animEase));
+                float t1 = Mathf.Clamp01(wallAnim[w]);
+                wallMatrices[w++] = Matrix4x4.TRS(new Vector3((hx + 0.5f + wd) * pm, wallOffset.x, z), rP90, bs * DOVirtual.EasedValue(0f, 1f, t1, animEase));
+                if (t1 < 1f) allDone = false;
             }
+            wallAnimDone = allDone;
         }
 
         private void UpdateCorners(float dt, float speed, Vector3 bs, Quaternion br)
@@ -249,11 +401,15 @@ namespace BL_Grid
             float hx = SizeX / 2f, hz = SizeZ / 2f, pm = positionMultiplier, cd = cornerOffset.y;
             float cx = (hx + 0.5f + cd) * pm, cz = (hz + 0.5f + cd) * pm;
             (Vector3 p, float r)[] c = { (new(-cx, cornerOffset.x, -cz), 180), (new(cx, cornerOffset.x, -cz), 90), (new(-cx, cornerOffset.x, cz), -90), (new(cx, cornerOffset.x, cz), 0) };
+            bool allDone = true;
             for (int i = 0; i < 4; i++)
             {
                 cornerAnim[i] = Mathf.MoveTowards(cornerAnim[i], 1f, dt * speed);
-                cornerMatrices[i] = Matrix4x4.TRS(c[i].p, br * Quaternion.Euler(0, 0, c[i].r), bs * DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(cornerAnim[i]), animEase));
+                float t = Mathf.Clamp01(cornerAnim[i]);
+                cornerMatrices[i] = Matrix4x4.TRS(c[i].p, br * Quaternion.Euler(0, 0, c[i].r), bs * DOVirtual.EasedValue(0f, 1f, t, animEase));
+                if (t < 1f) allDone = false;
             }
+            cornerAnimDone = allDone;
         }
 
         // --- Coordinate conversions (view works in XZ, backend works in XY) ---
@@ -309,13 +465,14 @@ namespace BL_Grid
             return Grid.I.Get(gridPos.x, gridPos.z);
         }
 
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
             if (!Application.isPlaying) return;
             if (Grid.I == null || !Grid.I.IsReady) return;
 
             int sx = Grid.I.Width;
             int sz = Grid.I.Height;
+            if (sx * sz > 2500) return; // skip gizmos for large grids
 
             Gizmos.color = Color.white;
             for (int x = 0; x < sx; x++)

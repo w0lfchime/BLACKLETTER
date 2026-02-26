@@ -710,8 +710,8 @@ MonoBehaviour:
   Hub: {fileID: 3491106165475578014, guid: 55bbea8bb01c4e14b93b015b4fe41e60, type: 3}
   entities: []
   Drones: []
-  Width: 21
-  Height: 21
+  Width: 200
+  Height: 200
   initOnAwake: 1
   rebuildOnValidate: 1
 --- !u!114 &1144014722
@@ -730,7 +730,7 @@ MonoBehaviour:
   - Position: {x: 0, y: 0}
     Stackable: 0
     visualDataIndex: 0
-  amount: 100
+  amount: 10000
 --- !u!1 &1447649068
 GameObject:
   m_ObjectHideFlags: 0
@@ -820,17 +820,17 @@ MonoBehaviour:
   animEase: 27
   tileMesh: {fileID: -8806005965475233444, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   tileMaterials:
-  - {fileID: 2100000, guid: 5b6610101994c414db47c377154891c9, type: 2}
-  - {fileID: 2100000, guid: ddcd8ebaa7087d147b57bfe1d6b42fff, type: 2}
+  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
+  - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   wallMesh: {fileID: -6416487109790020563, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   wallMaterials:
-  - {fileID: 2100000, guid: 5b6610101994c414db47c377154891c9, type: 2}
-  - {fileID: 2100000, guid: ddcd8ebaa7087d147b57bfe1d6b42fff, type: 2}
+  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
+  - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   wallOffset: {x: -0.5, y: -0.05}
   cornerMesh: {fileID: -7053214949996592884, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   cornerMaterials:
-  - {fileID: 2100000, guid: 5b6610101994c414db47c377154891c9, type: 2}
-  - {fileID: 2100000, guid: ddcd8ebaa7087d147b57bfe1d6b42fff, type: 2}
+  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
+  - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   cornerOffset: {x: -0.5, y: 0}
 --- !u!114 &1609169751
 MonoBehaviour:
@@ -847,8 +847,8 @@ MonoBehaviour:
   visualDataArrayInspector:
   - mesh: {fileID: 6304961352343156586, guid: 596ad526e3c120645b05645b8a42c7a4, type: 3}
     materials:
-    - {fileID: 2100000, guid: 6739f7b6d77d5054e94a698609d0780e, type: 2}
-    - {fileID: 2100000, guid: 140b2fefc73ed634b8e4ec36e0e59e74, type: 2}
+    - {fileID: 2100000, guid: d50dcf17f139db64bacd01bf53a7ede5, type: 2}
+    - {fileID: 2100000, guid: fc1cc8dc9bf46fc4ca0337b8d3967752, type: 2}
     scale: 125
     rotation: {x: -90, y: 0, z: 0}
     Height: 0.2
