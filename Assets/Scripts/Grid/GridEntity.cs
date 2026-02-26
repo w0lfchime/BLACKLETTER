@@ -22,9 +22,7 @@ namespace BL_Grid
         public float Height;
         public bool Stackable;
 
-        //visual stuff
-        public Mesh mesh;
-        public Scale scale;
+        public int visualDataIndex;
     }
 
     public abstract class GridEntity : MonoBehaviour

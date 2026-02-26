@@ -30,6 +30,9 @@ namespace BL_Grid
         [SerializeField] private Material[] cornerMaterials;
         [SerializeField] private Vector2 cornerOffset = Vector2.zero; // x=height, y=distance from grid
 
+        [Header("Entities")]
+        [SerializeField] private Material entityMaterial;
+
         [Header("Runtime (View-layer occupancy)")]
         public List<GameObject>[,] gridArray;      // objects on each tile (view-side)
         
@@ -101,6 +104,9 @@ namespace BL_Grid
                 UpdateCorners(dt, speed, bs, br);
                 DrawInstanced(cornerMesh, cornerMaterials, cornerMatrices, cornerCount);
             }
+
+            // Draw entities from backend
+            DrawEntities();
         }
 
         private void DrawInstanced(Mesh mesh, Material[] mats, Matrix4x4[] matrices, int count)
@@ -114,6 +120,42 @@ namespace BL_Grid
                         System.Array.Copy(matrices, i, batchMatrices, 0, batchSize);
                         Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchMatrices, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
                     }
+        }
+
+        private void DrawEntities()
+        {
+            if (Grid.I == null || Grid.I.entities == null || entityMaterial == null) return;
+
+
+            // Group entities by mesh for batching
+            var meshGroups = new Dictionary<Mesh, List<Matrix4x4>>();
+
+            foreach (var entity in Grid.I.entities)
+            {
+                GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
+                if (data.mesh == null) continue;
+
+                Vector3 worldPos = GridToWorld(new Vector3Int(entity.Position.x, (int)entity.Height, entity.Position.y));
+                Vector3 scale = Vector3.one * data.scale;
+                Matrix4x4 matrix = Matrix4x4.TRS(worldPos, Quaternion.identity, scale * positionMultiplier);
+
+                if (!meshGroups.ContainsKey(data.mesh))
+                    meshGroups[data.mesh] = new List<Matrix4x4>();
+                meshGroups[data.mesh].Add(matrix);
+            }
+
+            // Draw each mesh group
+            foreach (var kvp in meshGroups)
+            {
+                var matrices = kvp.Value.ToArray();
+                for (int i = 0; i < matrices.Length; i += 1023)
+                {
+                    int batchSize = Mathf.Min(1023, matrices.Length - i);
+                    Matrix4x4[] batch = new Matrix4x4[batchSize];
+                    System.Array.Copy(matrices, i, batch, 0, batchSize);
+                    Graphics.DrawMeshInstanced(kvp.Key, 0, entityMaterial, batch, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
+                }
+            }
         }
 
         public void Rebuild(bool force = false)
