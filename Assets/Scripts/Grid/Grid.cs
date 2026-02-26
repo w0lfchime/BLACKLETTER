@@ -35,8 +35,8 @@ namespace BL_Grid
         public List<Drone> Drones = new List<Drone>();
 
         [Header("Grid Size (Backend)")]
-        [SerializeField, UnityEngine.Range(1, 50)] public int Width = 21;
-        [SerializeField, UnityEngine.Range(1, 50)] public int Height = 21;
+        [SerializeField, UnityEngine.Range(1, 200)] public int Width = 21;
+        [SerializeField, UnityEngine.Range(1, 200)] public int Height = 21;
 
         [Header("Init Behavior")]
         [SerializeField] private bool initOnAwake = true;

@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2403910971166736460, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
+  - {fileID: 2100000, guid: c8c67241fe1012145aa30147e143a8ba, type: 2}
   - {fileID: 7957322299286140177, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -133,9 +133,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   View: {fileID: 8558815051125479803}
-  Position: {x: 0, y: 0}
-  height: 0
-  stackable: 0
+  Data:
+    Position: {x: 0, y: 0}
+    Stackable: 0
+    visualDataIndex: 0
+  Height: 0
 --- !u!1 &3842223865274083390
 GameObject:
   m_ObjectHideFlags: 0

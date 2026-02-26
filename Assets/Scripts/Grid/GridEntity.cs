@@ -19,18 +19,15 @@ namespace BL_Grid
     public class GridEntityData
     {
         public Vector2Int Position;
-        public float Height;
         public bool Stackable;
-
-        //visual stuff
-        public Mesh mesh;
-        public Scale scale;
+        public int visualDataIndex;
     }
 
     public abstract class GridEntity : MonoBehaviour
     {
         public ViewEntity View;
         public GridEntityData Data;
+        public float Height;
 
 
         public void SingleStepInDirection(GridDirection direction, bool wrapAroundEnabled = false) //ignore wrap for now
@@ -40,7 +37,7 @@ namespace BL_Grid
 
         void Start()
         {
-            View.GoToPosition(new Vector3Int(Data.Position.x, (int)Data.Height, Data.Position.y), 0f);
+            View.GoToPosition(new Vector3Int(Data.Position.x, (int)Height, Data.Position.y), 0f);
         }
 
         public static Vector2Int GetDirectionVector(GridDirection direction) => direction switch

@@ -670,6 +670,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1144014720}
   - component: {fileID: 1144014721}
+  - component: {fileID: 1144014722}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -707,11 +708,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Drone: {fileID: 7462912387970245473, guid: 432c77d03844cfe40a6a63927a862fab, type: 3}
   Hub: {fileID: 3491106165475578014, guid: 55bbea8bb01c4e14b93b015b4fe41e60, type: 3}
+  entities: []
   Drones: []
   Width: 21
   Height: 21
   initOnAwake: 1
   rebuildOnValidate: 1
+--- !u!114 &1144014722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144014718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2885b5c6387519d44b8b8c440acda1c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Ores:
+  - Position: {x: 0, y: 0}
+    Height: 0
+    Stackable: 0
+    visualDataIndex: 0
 --- !u!1 &1447649068
 GameObject:
   m_ObjectHideFlags: 0
@@ -757,6 +776,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1609169749}
   - component: {fileID: 1609169750}
+  - component: {fileID: 1609169751}
   m_Layer: 0
   m_Name: GridView
   m_TagString: Untagged
@@ -812,6 +832,23 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   cornerOffset: {x: -0.5, y: 0}
+  entityMaterial: {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
+--- !u!114 &1609169751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609169748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6d51b5b72a6b62429f20bc3a569c6a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  visualDataArrayInspector:
+  - mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    material: {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
+    scale: 0.75
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
