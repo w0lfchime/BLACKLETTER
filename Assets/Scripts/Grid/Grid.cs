@@ -30,6 +30,8 @@ namespace BL_Grid
         public GameObject Drone, Hub;
         public static Grid I { get; private set; }
 
+        public List<GridEntityData> entities;
+
         public List<Drone> Drones = new List<Drone>();
 
         [Header("Grid Size (Backend)")]
@@ -116,7 +118,7 @@ namespace BL_Grid
         public GameObject SpawnEntity(GameObject entity, Vector2Int position)
         {
             GameObject spawnIns = Instantiate(entity, transform.parent);
-            spawnIns.GetComponent<GridEntity>().Position = position;
+            spawnIns.GetComponent<GridEntity>().Data.Position = position;
             return spawnIns;
         }
 
