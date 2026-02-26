@@ -6,6 +6,7 @@ using UnityEngine;
 public class GridSpawner : MonoBehaviour
 {
     public List<GridEntityData> Ores;
+    public int amount;
     GridEntityData CreateOre()
     {
         GridEntityData oreData = Ores[UnityEngine.Random.Range(0, Ores.Count)];
@@ -18,7 +19,7 @@ public class GridSpawner : MonoBehaviour
 
     void Start()
     {
-        for(int i = 0; i < 100; i++){
+        for(int i = 0; i < amount; i++){
             BL_Grid.Grid.I.entities.Add(CreateOre());
         }
     }

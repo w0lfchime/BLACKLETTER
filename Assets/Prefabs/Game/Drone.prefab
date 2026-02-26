@@ -151,7 +151,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
-  - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
+  - {fileID: 2100000, guid: c8c67241fe1012145aa30147e143a8ba, type: 2}
   - {fileID: 2100000, guid: 1b4a0355e79b4df48864d0a3542ea4e1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -598,5 +598,6 @@ MonoBehaviour:
   View: {fileID: 4207623673731210006}
   Data:
     Position: {x: 0, y: 0}
-    Height: 2
     Stackable: 0
+    visualDataIndex: 0
+  Height: 2

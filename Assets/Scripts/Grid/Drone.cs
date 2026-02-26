@@ -11,7 +11,7 @@ namespace BL_Grid
         {
             Vector2Int newPosition = Data.Position + GetDirectionVector(direction);
             newPosition = Grid.I.WrapPosition(newPosition);
-            View.GoToPosition(new Vector3Int(newPosition.x, (int)Data.Height, newPosition.y), time);
+            View.GoToPosition(new Vector3Int(newPosition.x, (int)Height, newPosition.y), time);
 
             Data.Position = newPosition;
         }

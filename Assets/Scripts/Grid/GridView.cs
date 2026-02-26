@@ -30,9 +30,6 @@ namespace BL_Grid
         [SerializeField] private Material[] cornerMaterials;
         [SerializeField] private Vector2 cornerOffset = Vector2.zero; // x=height, y=distance from grid
 
-        [Header("Entities")]
-        [SerializeField] private Material entityMaterial;
-
         [Header("Runtime (View-layer occupancy)")]
         public List<GameObject>[,] gridArray;      // objects on each tile (view-side)
         
@@ -124,36 +121,53 @@ namespace BL_Grid
 
         private void DrawEntities()
         {
-            if (Grid.I == null || Grid.I.entities == null || entityMaterial == null) return;
+            if (Grid.I == null || Grid.I.entities == null) return;
+            int sx = SizeX, sz = SizeZ;
 
-
-            // Group entities by mesh for batching
-            var meshGroups = new Dictionary<Mesh, List<Matrix4x4>>();
+            // Group entities by visual data index for batching
+            var groups = new Dictionary<int, List<Matrix4x4>>();
 
             foreach (var entity in Grid.I.entities)
             {
                 GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
-                if (data.mesh == null) continue;
+                if (data.mesh == null || data.materials == null || data.materials.Length == 0) continue;
 
-                Vector3 worldPos = GridToWorld(new Vector3Int(entity.Position.x, (int)entity.Height, entity.Position.y));
-                Vector3 scale = Vector3.one * data.scale;
-                Matrix4x4 matrix = Matrix4x4.TRS(worldPos, Quaternion.identity, scale * positionMultiplier);
+                // Match entity to its tile's animation progress
+                float animT = 1f;
+                int ex = entity.Position.x, ez = entity.Position.y;
+                if (tileAnim != null && ex >= 0 && ex < sx && ez >= 0 && ez < sz)
+                {
+                    int tileIdx = ex * sz + ez;
+                    animT = DOVirtual.EasedValue(0f, 1f, Mathf.Clamp01(tileAnim[tileIdx]), animEase);
+                }
 
-                if (!meshGroups.ContainsKey(data.mesh))
-                    meshGroups[data.mesh] = new List<Matrix4x4>();
-                meshGroups[data.mesh].Add(matrix);
+                Vector3 worldPos = GridToWorld(new Vector3(entity.Position.x, data.Height, entity.Position.y));
+                Vector3 scale = Vector3.one * data.scale * animT;
+                float hash = Mathf.Abs((Mathf.Sin(entity.Position.x * 127.1f + entity.Position.y * 311.7f) * 43758.5453f) % 1f);
+                Quaternion rot = Quaternion.Euler(data.rotation) * (data.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
+                Matrix4x4 matrix = Matrix4x4.TRS(worldPos, rot, scale * positionMultiplier);
+
+                if (!groups.ContainsKey(entity.visualDataIndex))
+                    groups[entity.visualDataIndex] = new List<Matrix4x4>();
+                groups[entity.visualDataIndex].Add(matrix);
             }
 
-            // Draw each mesh group
-            foreach (var kvp in meshGroups)
+            // Draw each group with its own materials
+            foreach (var kvp in groups)
             {
+                GridVisualData data = RendererDictionary.visualDataArray[kvp.Key];
                 var matrices = kvp.Value.ToArray();
-                for (int i = 0; i < matrices.Length; i += 1023)
+
+                for (int sub = 0; sub < data.mesh.subMeshCount && sub < data.materials.Length; sub++)
                 {
-                    int batchSize = Mathf.Min(1023, matrices.Length - i);
-                    Matrix4x4[] batch = new Matrix4x4[batchSize];
-                    System.Array.Copy(matrices, i, batch, 0, batchSize);
-                    Graphics.DrawMeshInstanced(kvp.Key, 0, entityMaterial, batch, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
+                    if (data.materials[sub] == null) continue;
+                    for (int i = 0; i < matrices.Length; i += 1023)
+                    {
+                        int batchSize = Mathf.Min(1023, matrices.Length - i);
+                        Matrix4x4[] batch = new Matrix4x4[batchSize];
+                        System.Array.Copy(matrices, i, batch, 0, batchSize);
+                        Graphics.DrawMeshInstanced(data.mesh, sub, data.materials[sub], batch, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
+                    }
                 }
             }
         }
@@ -267,7 +281,7 @@ namespace BL_Grid
             return new Vector3Int(x, 0, z);
         }
 
-        public Vector3 GridToWorld(Vector3Int gridPos)
+        public Vector3 GridToWorld(Vector3 gridPos)
         {
             int sx = SizeX;
             int sz = SizeZ;
