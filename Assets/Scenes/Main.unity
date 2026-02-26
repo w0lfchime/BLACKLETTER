@@ -728,9 +728,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Ores:
   - Position: {x: 0, y: 0}
-    Height: 0
     Stackable: 0
     visualDataIndex: 0
+  amount: 100
 --- !u!1 &1447649068
 GameObject:
   m_ObjectHideFlags: 0
@@ -820,19 +820,18 @@ MonoBehaviour:
   animEase: 27
   tileMesh: {fileID: -8806005965475233444, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   tileMaterials:
-  - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
+  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   wallMesh: {fileID: -6416487109790020563, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   wallMaterials:
-  - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
+  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   wallOffset: {x: -0.5, y: -0.05}
   cornerMesh: {fileID: -7053214949996592884, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   cornerMaterials:
-  - {fileID: 2100000, guid: 929c9971742ca5143838fdb453a0e0ce, type: 2}
+  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
   - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
   cornerOffset: {x: -0.5, y: 0}
-  entityMaterial: {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
 --- !u!114 &1609169751
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -846,9 +845,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   visualDataArrayInspector:
-  - mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    material: {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
-    scale: 0.75
+  - mesh: {fileID: 6304961352343156586, guid: 596ad526e3c120645b05645b8a42c7a4, type: 3}
+    materials:
+    - {fileID: 2100000, guid: d50dcf17f139db64bacd01bf53a7ede5, type: 2}
+    - {fileID: 2100000, guid: fc1cc8dc9bf46fc4ca0337b8d3967752, type: 2}
+    scale: 125
+    rotation: {x: -90, y: 0, z: 0}
+    Height: 0.2
+    randomRotation: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
