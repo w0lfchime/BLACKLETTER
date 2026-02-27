@@ -1,4 +1,4 @@
-using BL_Grid;
+using GameLogic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -47,7 +47,7 @@ public class PointerCast : MonoBehaviour
             timer += Time.fixedDeltaTime;
             if(timer >= delay)
             {
-                BL_Grid.Grid.I.Drones[0].SingleStepInDirection(GetArrowKeyVector(), delay);
+                GameLogic.Grid.I.Drones[0].SingleStepInDirection(GetArrowKeyVector(), delay);
                 timer = 0f;
             }
         }
