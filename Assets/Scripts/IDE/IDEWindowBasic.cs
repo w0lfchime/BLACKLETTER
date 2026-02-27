@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Blackletter
 {
-    public sealed class IDEWindow : MonoBehaviour
+    public sealed class IDEWindowBasic : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private BlackletterScript script;

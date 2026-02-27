@@ -2,127 +2,145 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IOnClock
+namespace GameLogic
 {
-    void Tick(float dt, int tick);
-}
-
-[DefaultExecutionOrder(-10000)]
-public sealed class Clock : MonoBehaviour
-{
-    public static Clock I;
-
-    [Header("Tick")]
-    public int tickRate = 60;
-    public bool paused = false;
-
-    [Header("Catch-up")]
-    public bool catchUp = true;
-    public int maxTicksPerFrame = 8;
-
-    [NonSerialized] public int tick;
-    [NonSerialized] public float dt;
-    [NonSerialized] public float time;
-
-    readonly List<IOnClock> list = new();
-
-    //to avoid concurrent modification
-    readonly List<IOnClock> pendingAdd = new();
-    readonly List<IOnClock> pendingRemove = new();
-    bool iterating;
-
-    float accumulator;
-
-    void Awake()
+    public interface IOnClock
     {
-        if (I && I != this) { Destroy(gameObject); return; }
-        I = this;
-        dt = tickRate > 0 ? 1f / tickRate : 1f / 60f;
+        void Tick(float dt, int tick);
     }
 
-    void OnEnable()
+    [DefaultExecutionOrder(-10000)]
+    public sealed class Clock : MonoBehaviour
     {
-        accumulator = 0f;
-    }
+        public static Clock I;
 
-    void Update()
-    {
-        if (paused) return;
+        [Header("Tick")]
+        public int tickRate = 60;
+        public bool paused = false;
 
-        if (tickRate <= 0) tickRate = 1;
-        float targetDt = 1f / tickRate;
-        if (!Mathf.Approximately(dt, targetDt)) dt = targetDt;
+        [Header("Time Scale")]
+        [Range(0.1f, 10f)]
+        public float timeScale = 1f;
 
-        accumulator += Time.unscaledDeltaTime;
+        [Header("Catch-up")]
+        public bool catchUp = true;
+        public int maxTicksPerFrame = 8;
 
-        int steps = 0;
-        while (accumulator >= dt)
+        [NonSerialized] public int tick;
+        [NonSerialized] public float dt;
+        [NonSerialized] public float time;
+
+        readonly List<IOnClock> list = new();
+
+        //to avoid concurrent modification
+        readonly List<IOnClock> pendingAdd = new();
+        readonly List<IOnClock> pendingRemove = new();
+        bool iterating;
+
+        float accumulator;
+
+        void Awake()
         {
-            Step();
-            accumulator -= dt;
-
-            if (!catchUp) { accumulator = 0f; break; }
-            if (++steps >= maxTicksPerFrame) { accumulator = 0f; break; }
-        }
-    }
-
-    void Step()
-    {
-        tick++;
-        time += dt;
-
-        FlushPending();
-
-        iterating = true;
-        for (int i = 0; i < list.Count; i++)
-            list[i].Tick(dt, tick);
-        iterating = false;
-
-        FlushPending();
-    }
-
-
-
-    //to avoid concurrent modification
-    void FlushPending()
-    {
-        if (pendingRemove.Count > 0)
-        {
-            for (int i = 0; i < pendingRemove.Count; i++)
-                list.Remove(pendingRemove[i]);
-            pendingRemove.Clear();
+            if (I && I != this) { Destroy(gameObject); return; }
+            I = this;
+            dt = tickRate > 0 ? 1f / tickRate : 1f / 60f;
         }
 
-        if (pendingAdd.Count > 0)
+        void OnEnable()
         {
-            for (int i = 0; i < pendingAdd.Count; i++)
+            accumulator = 0f;
+        }
+
+        void Update()
+        {
+            if (paused) return;
+
+            if (tickRate <= 0) tickRate = 1;
+            float targetDt = 1f / tickRate;
+            if (!Mathf.Approximately(dt, targetDt)) dt = targetDt;
+
+            accumulator += Time.unscaledDeltaTime * timeScale;
+
+            int steps = 0;
+            while (accumulator >= dt)
             {
-                var t = pendingAdd[i];
-                if (!list.Contains(t)) list.Add(t);
+                Step();
+                accumulator -= dt;
+
+                if (!catchUp) { accumulator = 0f; break; }
+                if (++steps >= maxTicksPerFrame) { accumulator = 0f; break; }
             }
-            pendingAdd.Clear();
         }
-    }
 
-    public static void Register(IOnClock t)
-    {
-        if (!I || t == null) return;
-        if (I.iterating) { if (!I.pendingAdd.Contains(t)) I.pendingAdd.Add(t); }
-        else if (!I.list.Contains(t)) I.list.Add(t);
-    }
+        void Step()
+        {
+            tick++;
+            time += dt;
 
-    public static void Unregister(IOnClock t)
-    {
-        if (!I || t == null) return;
-        if (I.iterating) { if (!I.pendingRemove.Contains(t)) I.pendingRemove.Add(t); }
-        else I.list.Remove(t);
-    }
+            FlushPending();
 
-    public static void ResetClock()
-    {
-        if (!I) return;
-        I.tick = 0;
-        I.time = 0f;
-        I.accumulator = 0f;
+            iterating = true;
+            for (int i = 0; i < list.Count; i++)
+                list[i].Tick(dt, tick);
+            iterating = false;
+
+            FlushPending();
+        }
+
+        //for time panel
+        public static void StepOnce()
+        {
+            if (!I) return;
+
+            // Enforce "step only when paused" at the Clock level too (optional but good).
+            if (!I.paused) return;
+
+            I.Step();
+        }
+
+
+
+        //to avoid concurrent modification
+        void FlushPending()
+        {
+            if (pendingRemove.Count > 0)
+            {
+                for (int i = 0; i < pendingRemove.Count; i++)
+                    list.Remove(pendingRemove[i]);
+                pendingRemove.Clear();
+            }
+
+            if (pendingAdd.Count > 0)
+            {
+                for (int i = 0; i < pendingAdd.Count; i++)
+                {
+                    var t = pendingAdd[i];
+                    if (!list.Contains(t)) list.Add(t);
+                }
+                pendingAdd.Clear();
+            }
+        }
+
+        public static void Register(IOnClock t)
+        {
+            if (!I || t == null) return;
+            if (I.iterating) { if (!I.pendingAdd.Contains(t)) I.pendingAdd.Add(t); }
+            else if (!I.list.Contains(t)) I.list.Add(t);
+        }
+
+        public static void Unregister(IOnClock t)
+        {
+            if (!I || t == null) return;
+            if (I.iterating) { if (!I.pendingRemove.Contains(t)) I.pendingRemove.Add(t); }
+            else I.list.Remove(t);
+        }
+
+        public static void ResetClock()
+        {
+            if (!I) return;
+            I.tick = 0;
+            I.time = 0f;
+            I.accumulator = 0f;
+        }
     }
 }
