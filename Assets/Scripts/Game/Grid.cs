@@ -30,7 +30,7 @@ namespace GameLogic
         public GameObject Drone, Hub;
         public static Grid I { get; private set; }
 
-        public List<GridEntityData> entities;
+        public List<GPUEntityData> entities;
 
         public List<Drone> Drones = new List<Drone>();
 
@@ -118,7 +118,7 @@ namespace GameLogic
         public GameObject SpawnEntity(GameObject entity, Vector2Int position)
         {
             GameObject spawnIns = Instantiate(entity, transform.parent);
-            spawnIns.GetComponent<GridEntity>().Data.Position = position;
+            spawnIns.GetComponent<GPUEntity>().Data.Position = position;
             return spawnIns;
         }
 

@@ -12,7 +12,7 @@ namespace GameLogic
         public Mesh Mesh;
     }
 
-    public class Ore : GridEntity
+    public class Ore : GPUEntity
     {
         public List<ResourceEntry> Resources = new List<ResourceEntry>();
     }
