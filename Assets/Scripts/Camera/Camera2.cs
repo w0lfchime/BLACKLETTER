@@ -63,12 +63,18 @@ public class Camera2 : MonoBehaviour
 
     void HandleMovement()
     {
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
+        float h = 0f;
+        float v = 0f;
+
+        if (Input.GetKey(KeyCode.A)) h -= 1f;
+        if (Input.GetKey(KeyCode.D)) h += 1f;
+        if (Input.GetKey(KeyCode.S)) v -= 1f;
+        if (Input.GetKey(KeyCode.W)) v += 1f;
 
         Vector3 moveDir = new Vector3(h, 0f, v).normalized;
         pivotTargetPos += moveDir * moveSpeed * Time.deltaTime;
     }
+
 
     void HandleZoom()
     {
