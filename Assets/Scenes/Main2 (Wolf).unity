@@ -770,17 +770,17 @@ MonoBehaviour:
   animEase: 27
   tileMesh: {fileID: -8806005965475233444, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   tileMaterials:
-  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
-  - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
+  - {fileID: 2100000, guid: 146ecb7d20450cd48a16fafafb0822ac, type: 2}
+  - {fileID: 2100000, guid: f9a86262387268246a340ebec33aebfa, type: 2}
   wallMesh: {fileID: -6416487109790020563, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   wallMaterials:
-  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
-  - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
+  - {fileID: 2100000, guid: 146ecb7d20450cd48a16fafafb0822ac, type: 2}
+  - {fileID: 2100000, guid: f9a86262387268246a340ebec33aebfa, type: 2}
   wallOffset: {x: -0.5, y: -0.05}
   cornerMesh: {fileID: -7053214949996592884, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   cornerMaterials:
-  - {fileID: 2100000, guid: 421eda88bfde50349b1ab9031d51e1ac, type: 2}
-  - {fileID: 2100000, guid: 91b7db059741d26478becc6cd9094a3b, type: 2}
+  - {fileID: 2100000, guid: 146ecb7d20450cd48a16fafafb0822ac, type: 2}
+  - {fileID: 2100000, guid: f9a86262387268246a340ebec33aebfa, type: 2}
   cornerOffset: {x: -0.5, y: 0}
 --- !u!114 &1609169751
 MonoBehaviour:
@@ -840,8 +840,8 @@ MonoBehaviour:
   zoomSmoothFactor: 12
   minZoomDistance: 5
   maxZoomDistance: 25
-  ZoomPitchFactor: 0.15
-  MaxZoomPitchEffect: 20
+  ZoomPitchFactor: 0.2
+  MaxZoomPitchEffect: 150
 --- !u!4 &1822903124
 Transform:
   m_ObjectHideFlags: 0

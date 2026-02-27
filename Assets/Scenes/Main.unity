@@ -841,7 +841,7 @@ MonoBehaviour:
   minZoomDistance: 5
   maxZoomDistance: 25
   ZoomPitchFactor: 0.15
-  MaxZoomPitchEffect: 20
+  MaxZoomPitchEffect: 150
 --- !u!4 &1822903124
 Transform:
   m_ObjectHideFlags: 0
