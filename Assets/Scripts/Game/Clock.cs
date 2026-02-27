@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface ITickable
+public interface IOnClock
 {
     void Tick(float dt, int tick);
 }
 
 [DefaultExecutionOrder(-10000)]
-public sealed class TickManager : MonoBehaviour
+public sealed class Clock : MonoBehaviour
 {
-    public static TickManager I;
+    public static Clock I;
 
     [Header("Tick")]
     public int tickRate = 60;
@@ -24,11 +24,11 @@ public sealed class TickManager : MonoBehaviour
     [NonSerialized] public float dt;
     [NonSerialized] public float time;
 
-    readonly List<ITickable> list = new();
+    readonly List<IOnClock> list = new();
 
     //to avoid concurrent modification
-    readonly List<ITickable> pendingAdd = new();
-    readonly List<ITickable> pendingRemove = new();
+    readonly List<IOnClock> pendingAdd = new();
+    readonly List<IOnClock> pendingRemove = new();
     bool iterating;
 
     float accumulator;
@@ -104,14 +104,14 @@ public sealed class TickManager : MonoBehaviour
         }
     }
 
-    public static void Register(ITickable t)
+    public static void Register(IOnClock t)
     {
         if (!I || t == null) return;
         if (I.iterating) { if (!I.pendingAdd.Contains(t)) I.pendingAdd.Add(t); }
         else if (!I.list.Contains(t)) I.list.Add(t);
     }
 
-    public static void Unregister(ITickable t)
+    public static void Unregister(IOnClock t)
     {
         if (!I || t == null) return;
         if (I.iterating) { if (!I.pendingRemove.Contains(t)) I.pendingRemove.Add(t); }
