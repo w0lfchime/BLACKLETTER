@@ -20,6 +20,10 @@ namespace GameLogic
         [SerializeField] private Mesh tileMesh;
         [SerializeField] private Material[] tileMaterials; // Must have GPU Instancing enabled!
 
+        [Header("Tile LOD")]
+        [SerializeField] private float lodHeight = 30f; // camera Y above which LOD mesh is used
+        private Mesh tileMeshLOD;
+
         [Header("Wall Tiles (edges)")]
         [SerializeField] private Mesh wallMesh;
         [SerializeField] private Material[] wallMaterials;
@@ -55,6 +59,7 @@ namespace GameLogic
         private Quaternion lastCamRot;
         
         private MaterialPropertyBlock propertyBlock;
+        private Camera cachedCam;
 
         public void MarkEntitiesDirty() => entitiesDirty = true;
 
@@ -85,6 +90,20 @@ namespace GameLogic
             }
 
             propertyBlock = new MaterialPropertyBlock();
+            cachedCam = Camera.main;
+            if (cachedCam == null) cachedCam = FindObjectOfType<Camera>();
+
+            // Generate a simple quad mesh for LOD (XY plane, same orientation as typical tile meshes)
+            tileMeshLOD = new Mesh { name = "TileLOD_Quad" };
+            tileMeshLOD.vertices = new Vector3[] {
+                new(-0.5f, -0.5f, 0), new(0.5f, -0.5f, 0),
+                new(0.5f, 0.5f, 0), new(-0.5f, 0.5f, 0)
+            };
+            tileMeshLOD.triangles = new int[] { 0, 2, 1, 0, 3, 2 };
+            tileMeshLOD.normals = new Vector3[] { -Vector3.forward, -Vector3.forward, -Vector3.forward, -Vector3.forward };
+            tileMeshLOD.uv = new Vector2[] { new(0,0), new(1,0), new(1,1), new(0,1) };
+            tileMeshLOD.colors = new Color[] { Color.white, Color.white, Color.white, Color.white };
+
             Rebuild(force: true);
         }
 
@@ -98,6 +117,8 @@ namespace GameLogic
             if (tileMesh != null && tileMaterials?.Length > 0 && tileMatrices != null)
             {
                 ComputeVisibleRange();
+                if (Time.frameCount % 60 == 0)
+                    Debug.Log($"VisRange: X[{visMinX}..{visMaxX}] Z[{visMinZ}..{visMaxZ}] = {(visMaxX-visMinX+1)*(visMaxZ-visMinZ+1)} tiles of {tileCount} total. CamPos={cachedCam?.transform.position}");
 
                 if (!tileAnimDone)
                 {
@@ -114,7 +135,8 @@ namespace GameLogic
                 }
 
                 // Draw only visible tiles
-                DrawVisibleTiles(tileMesh, tileMaterials);
+                bool useLOD = tileMeshLOD != null && cachedCam != null && cachedCam.transform.position.y > lodHeight;
+                DrawVisibleTiles(useLOD ? tileMeshLOD : tileMesh, tileMaterials);
             }
 
             // Animate walls
@@ -149,58 +171,67 @@ namespace GameLogic
 
         private void ComputeVisibleRange()
         {
-            Camera cam = Camera.main;
+            Camera cam = cachedCam;
             if (cam == null) { visMinX = 0; visMaxX = SizeX - 1; visMinZ = 0; visMaxZ = SizeZ - 1; return; }
 
             int sx = SizeX, sz = SizeZ;
             float minGx = float.MaxValue, maxGx = float.MinValue;
             float minGz = float.MaxValue, maxGz = float.MinValue;
 
-            // Cast viewport corners onto the grid plane (y=0)
-            Vector3[] corners = new Vector3[4];
-            corners[0] = new Vector3(0, 0, 0); // bottom-left
-            corners[1] = new Vector3(1, 0, 0); // bottom-right
-            corners[2] = new Vector3(0, 1, 0); // top-left
-            corners[3] = new Vector3(1, 1, 0); // top-right
+            // Cast rays from viewport corners + edges onto the grid plane (y=0)
+            // Use 8 sample points for better coverage with angled cameras
+            Vector3[] viewpoints = new Vector3[8];
+            viewpoints[0] = new Vector3(0, 0, 0);
+            viewpoints[1] = new Vector3(1, 0, 0);
+            viewpoints[2] = new Vector3(0, 1, 0);
+            viewpoints[3] = new Vector3(1, 1, 0);
+            viewpoints[4] = new Vector3(0.5f, 0, 0);
+            viewpoints[5] = new Vector3(0.5f, 1, 0);
+            viewpoints[6] = new Vector3(0, 0.5f, 0);
+            viewpoints[7] = new Vector3(1, 0.5f, 0);
 
-            for (int i = 0; i < 4; i++)
+            int validHits = 0;
+            for (int i = 0; i < viewpoints.Length; i++)
             {
-                Ray ray = cam.ViewportPointToRay(corners[i]);
+                Ray ray = cam.ViewportPointToRay(viewpoints[i]);
                 // Intersect with y=0 plane
-                if (Mathf.Abs(ray.direction.y) > 0.0001f)
+                if (Mathf.Abs(ray.direction.y) < 0.0001f) continue; // parallel, skip
+                
+                float t = -ray.origin.y / ray.direction.y;
+                if (t < 0)
                 {
-                    float t = -ray.origin.y / ray.direction.y;
-                    if (t > 0)
-                    {
-                        Vector3 hit = ray.origin + ray.direction * t;
-                        float gx = hit.x / positionMultiplier + sx / 2f;
-                        float gz = hit.z / positionMultiplier + sz / 2f;
-                        minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
-                        minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
-                    }
-                    else
-                    {
-                        // Ray points away from plane, use far distance along ray projected to plane
-                        float tFar = (cam.farClipPlane - ray.origin.y) / ray.direction.y;
-                        Vector3 hit = ray.origin + ray.direction * Mathf.Abs(tFar);
-                        float gx = hit.x / positionMultiplier + sx / 2f;
-                        float gz = hit.z / positionMultiplier + sz / 2f;
-                        minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
-                        minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
-                    }
+                    // Ray points away from ground — clamp to a reasonable far distance
+                    // Project along the ray's XZ direction by the far clip plane distance
+                    float farDist = cam.farClipPlane;
+                    Vector3 farPoint = ray.origin + ray.direction.normalized * farDist;
+                    float gx = farPoint.x / positionMultiplier + sx / 2f;
+                    float gz = farPoint.z / positionMultiplier + sz / 2f;
+                    // Clamp to grid bounds so it doesn't blow out the range
+                    gx = Mathf.Clamp(gx, -1, sx + 1);
+                    gz = Mathf.Clamp(gz, -1, sz + 1);
+                    minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
+                    minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
+                    validHits++;
+                    continue;
                 }
-                else
+
                 {
-                    // Ray is parallel to ground — camera sees to horizon, render all
-                    minGx = 0; maxGx = sx; minGz = 0; maxGz = sz;
+                    Vector3 hit = ray.origin + ray.direction * t;
+                    float gx = hit.x / positionMultiplier + sx / 2f;
+                    float gz = hit.z / positionMultiplier + sz / 2f;
+                    minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
+                    minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
+                    validHits++;
                 }
             }
 
-            // Pad by 1 tile to avoid popping at edges
-            visMinX = Mathf.Max(0, Mathf.FloorToInt(minGx) - 1);
-            visMaxX = Mathf.Min(sx - 1, Mathf.CeilToInt(maxGx) + 1);
-            visMinZ = Mathf.Max(0, Mathf.FloorToInt(minGz) - 1);
-            visMaxZ = Mathf.Min(sz - 1, Mathf.CeilToInt(maxGz) + 1);
+            if (validHits == 0) { visMinX = 0; visMaxX = sx - 1; visMinZ = 0; visMaxZ = sz - 1; return; }
+
+            // Pad by 2 tiles to avoid popping at edges
+            visMinX = Mathf.Max(0, Mathf.FloorToInt(minGx) - 2);
+            visMaxX = Mathf.Min(sx - 1, Mathf.CeilToInt(maxGx) + 2);
+            visMinZ = Mathf.Max(0, Mathf.FloorToInt(minGz) - 2);
+            visMaxZ = Mathf.Min(sz - 1, Mathf.CeilToInt(maxGz) + 2);
         }
 
         private void DrawVisibleTiles(Mesh mesh, Material[] mats)
@@ -233,7 +264,7 @@ namespace GameLogic
             if (Grid.I == null || Grid.I.entities == null) return;
 
             // Check if camera moved
-            Camera cam = Camera.main;
+            Camera cam = cachedCam;
             if (cam != null && (cam.transform.position != lastCamPos || cam.transform.rotation != lastCamRot))
             {
                 lastCamPos = cam.transform.position;

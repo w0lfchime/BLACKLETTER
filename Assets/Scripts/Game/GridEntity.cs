@@ -1,3 +1,4 @@
+using System;
 using GameLogic;
 using UnityEngine;
 
@@ -14,10 +15,19 @@ namespace GameLogic
         West
     }
 
+    [Serializable]
+    public class GridEntityData
+    {
+        public Vector2Int Position;
+        public bool Stackable;
+        public int visualDataIndex;
+    }
+
     public abstract class GridEntity : MonoBehaviour
     {
-
-
+        public GridEntityData Data;
+        public ViewEntity View;
+        public float Height = 0f;
         public void SingleStepInDirection(GridDirection direction, bool wrapAroundEnabled = false) //ignore wrap for now
         {
 
@@ -25,7 +35,7 @@ namespace GameLogic
 
         void Start()
         {
-
+            View.GoToPosition(new Vector3Int(Data.Position.x, (int)Height, Data.Position.y), 0f);
         }
 
         public Vector2Int GetDirectionVector(GridDirection direction) => direction switch
