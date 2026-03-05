@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
@@ -40,8 +40,8 @@ namespace GameLogic
         private int tileCount, wallCount, cornerCount, prevSx, prevSz;
         private bool tileAnimDone, wallAnimDone, cornerAnimDone;
         
-        // Reusable batch buffer (avoids allocating every frame)
-        private Matrix4x4[] batchBuffer = new Matrix4x4[1023];
+        // Reusable draw buffer (growable, replaces old 1023-limit batch buffer)
+        private Matrix4x4[] drawBuffer = new Matrix4x4[1024];
 
         // Visible grid range (computed from camera each frame)
         private int visMinX, visMaxX, visMinZ, visMaxZ;
@@ -55,6 +55,11 @@ namespace GameLogic
         private Quaternion lastCamRot;
         
         private MaterialPropertyBlock propertyBlock;
+        private Camera cachedCam;
+        private float prevTileScale;
+        private Vector3 prevTileRotation;
+
+
 
         public void MarkEntitiesDirty() => entitiesDirty = true;
 
@@ -85,6 +90,9 @@ namespace GameLogic
             }
 
             propertyBlock = new MaterialPropertyBlock();
+            cachedCam = Camera.main;
+            if (cachedCam == null) cachedCam = FindAnyObjectByType<Camera>();
+
             Rebuild(force: true);
         }
 
@@ -93,6 +101,21 @@ namespace GameLogic
             float dt = Time.deltaTime, speed = animDuration > 0 ? 1f / animDuration : 100f;
             Vector3 bs = Vector3.one * tileScale * positionMultiplier;
             Quaternion br = Quaternion.Euler(tileRotation);
+
+            // Detect Inspector changes to tileScale / tileRotation and rebuild matrices
+            if (tileScale != prevTileScale || tileRotation != prevTileRotation)
+            {
+                prevTileScale = tileScale;
+                prevTileRotation = tileRotation;
+                if (tileAnimDone && tileMatrices != null)
+                {
+                    for (int i = 0; i < tileCount; i++)
+                        tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs);
+                    entitiesDirty = true;
+                    wallAnimDone = false;
+                    cornerAnimDone = false;
+                }
+            }
 
             // Animate tiles
             if (tileMesh != null && tileMaterials?.Length > 0 && tileMatrices != null)
@@ -135,97 +158,106 @@ namespace GameLogic
             DrawEntities();
         }
 
-        private void DrawInstanced(Mesh mesh, Material[] mats, Matrix4x4[] matrices, int count)
+        private void EnsureDrawBuffer(int minSize)
         {
+            if (drawBuffer.Length < minSize)
+                drawBuffer = new Matrix4x4[Mathf.NextPowerOfTwo(minSize)];
+        }
+
+        private void DrawInstanced(Mesh mesh, Material[] mats, Matrix4x4[] matrices, int count,
+            UnityEngine.Rendering.ShadowCastingMode shadows = UnityEngine.Rendering.ShadowCastingMode.Off)
+        {
+            if (count == 0 || mesh == null) return;
             for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
-                if (mats[sub] != null)
-                    for (int i = 0; i < count; i += 1023)
-                    {
-                        int batchSize = Mathf.Min(1023, count - i);
-                        System.Array.Copy(matrices, i, batchBuffer, 0, batchSize);
-                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
-                    }
+            {
+                if (mats[sub] == null) continue;
+                var rp = new RenderParams(mats[sub])
+                {
+                    shadowCastingMode = shadows,
+                    matProps = propertyBlock
+                };
+                Graphics.RenderMeshInstanced(rp, mesh, sub, matrices, count);
+            }
         }
 
         private void ComputeVisibleRange()
         {
-            Camera cam = Camera.main;
+            Camera cam = cachedCam;
             if (cam == null) { visMinX = 0; visMaxX = SizeX - 1; visMinZ = 0; visMaxZ = SizeZ - 1; return; }
 
             int sx = SizeX, sz = SizeZ;
             float minGx = float.MaxValue, maxGx = float.MinValue;
             float minGz = float.MaxValue, maxGz = float.MinValue;
 
-            // Cast viewport corners onto the grid plane (y=0)
-            Vector3[] corners = new Vector3[4];
-            corners[0] = new Vector3(0, 0, 0); // bottom-left
-            corners[1] = new Vector3(1, 0, 0); // bottom-right
-            corners[2] = new Vector3(0, 1, 0); // top-left
-            corners[3] = new Vector3(1, 1, 0); // top-right
+            // Cast rays from viewport corners + edges onto the grid plane (y=0)
+            // Use 8 sample points for better coverage with angled cameras
+            Vector3[] viewpoints = new Vector3[8];
+            viewpoints[0] = new Vector3(0, 0, 0);
+            viewpoints[1] = new Vector3(1, 0, 0);
+            viewpoints[2] = new Vector3(0, 1, 0);
+            viewpoints[3] = new Vector3(1, 1, 0);
+            viewpoints[4] = new Vector3(0.5f, 0, 0);
+            viewpoints[5] = new Vector3(0.5f, 1, 0);
+            viewpoints[6] = new Vector3(0, 0.5f, 0);
+            viewpoints[7] = new Vector3(1, 0.5f, 0);
 
-            for (int i = 0; i < 4; i++)
+            int validHits = 0;
+            for (int i = 0; i < viewpoints.Length; i++)
             {
-                Ray ray = cam.ViewportPointToRay(corners[i]);
+                Ray ray = cam.ViewportPointToRay(viewpoints[i]);
                 // Intersect with y=0 plane
-                if (Mathf.Abs(ray.direction.y) > 0.0001f)
+                if (Mathf.Abs(ray.direction.y) < 0.0001f) continue; // parallel, skip
+                
+                float t = -ray.origin.y / ray.direction.y;
+                if (t < 0)
                 {
-                    float t = -ray.origin.y / ray.direction.y;
-                    if (t > 0)
-                    {
-                        Vector3 hit = ray.origin + ray.direction * t;
-                        float gx = hit.x / positionMultiplier + sx / 2f;
-                        float gz = hit.z / positionMultiplier + sz / 2f;
-                        minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
-                        minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
-                    }
-                    else
-                    {
-                        // Ray points away from plane, use far distance along ray projected to plane
-                        float tFar = (cam.farClipPlane - ray.origin.y) / ray.direction.y;
-                        Vector3 hit = ray.origin + ray.direction * Mathf.Abs(tFar);
-                        float gx = hit.x / positionMultiplier + sx / 2f;
-                        float gz = hit.z / positionMultiplier + sz / 2f;
-                        minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
-                        minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
-                    }
+                    // Ray points away from ground — clamp to a reasonable far distance
+                    // Project along the ray's XZ direction by the far clip plane distance
+                    float farDist = cam.farClipPlane;
+                    Vector3 farPoint = ray.origin + ray.direction.normalized * farDist;
+                    float gx = farPoint.x / positionMultiplier + sx / 2f;
+                    float gz = farPoint.z / positionMultiplier + sz / 2f;
+                    // Clamp to grid bounds so it doesn't blow out the range
+                    gx = Mathf.Clamp(gx, -1, sx + 1);
+                    gz = Mathf.Clamp(gz, -1, sz + 1);
+                    minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
+                    minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
+                    validHits++;
+                    continue;
                 }
-                else
+
                 {
-                    // Ray is parallel to ground — camera sees to horizon, render all
-                    minGx = 0; maxGx = sx; minGz = 0; maxGz = sz;
+                    Vector3 hit = ray.origin + ray.direction * t;
+                    float gx = hit.x / positionMultiplier + sx / 2f;
+                    float gz = hit.z / positionMultiplier + sz / 2f;
+                    minGx = Mathf.Min(minGx, gx); maxGx = Mathf.Max(maxGx, gx);
+                    minGz = Mathf.Min(minGz, gz); maxGz = Mathf.Max(maxGz, gz);
+                    validHits++;
                 }
             }
 
-            // Pad by 1 tile to avoid popping at edges
-            visMinX = Mathf.Max(0, Mathf.FloorToInt(minGx) - 1);
-            visMaxX = Mathf.Min(sx - 1, Mathf.CeilToInt(maxGx) + 1);
-            visMinZ = Mathf.Max(0, Mathf.FloorToInt(minGz) - 1);
-            visMaxZ = Mathf.Min(sz - 1, Mathf.CeilToInt(maxGz) + 1);
+            if (validHits == 0) { visMinX = 0; visMaxX = sx - 1; visMinZ = 0; visMaxZ = sz - 1; return; }
+
+            // Pad by 2 tiles to avoid popping at edges
+            visMinX = Mathf.Max(0, Mathf.FloorToInt(minGx) - 2);
+            visMaxX = Mathf.Min(sx - 1, Mathf.CeilToInt(maxGx) + 2);
+            visMinZ = Mathf.Max(0, Mathf.FloorToInt(minGz) - 2);
+            visMaxZ = Mathf.Min(sz - 1, Mathf.CeilToInt(maxGz) + 2);
         }
 
         private void DrawVisibleTiles(Mesh mesh, Material[] mats)
         {
-            int batchCount = 0;
+            int maxVisible = (visMaxX - visMinX + 1) * (visMaxZ - visMinZ + 1);
+            if (maxVisible <= 0) return;
+
+            EnsureDrawBuffer(maxVisible);
+
+            int count = 0;
             for (int x = visMinX; x <= visMaxX; x++)
-            {
                 for (int z = visMinZ; z <= visMaxZ; z++)
-                {
-                    batchBuffer[batchCount++] = tileMatrices[tileIndex[x, z]];
-                    if (batchCount == 1023)
-                    {
-                        for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
-                            if (mats[sub] != null)
-                                Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchCount, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
-                        batchCount = 0;
-                    }
-                }
-            }
-            if (batchCount > 0)
-            {
-                for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
-                    if (mats[sub] != null)
-                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchCount, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
-            }
+                    drawBuffer[count++] = tileMatrices[tileIndex[x, z]];
+
+            DrawInstanced(mesh, mats, drawBuffer, count);
         }
 
         private void DrawEntities()
@@ -233,7 +265,7 @@ namespace GameLogic
             if (Grid.I == null || Grid.I.entities == null) return;
 
             // Check if camera moved
-            Camera cam = Camera.main;
+            Camera cam = cachedCam;
             if (cam != null && (cam.transform.position != lastCamPos || cam.transform.rotation != lastCamRot))
             {
                 lastCamPos = cam.transform.position;
@@ -291,16 +323,11 @@ namespace GameLogic
                 GridVisualData data = RendererDictionary.visualDataArray[kvp.Key];
                 var matrices = kvp.Value;
 
-                for (int sub = 0; sub < data.mesh.subMeshCount && sub < data.materials.Length; sub++)
-                {
-                    if (data.materials[sub] == null) continue;
-                    for (int i = 0; i < matrices.Count; i += 1023)
-                    {
-                        int batchSize = Mathf.Min(1023, matrices.Count - i);
-                        for (int j = 0; j < batchSize; j++) batchBuffer[j] = matrices[i + j];
-                        Graphics.DrawMeshInstanced(data.mesh, sub, data.materials[sub], batchBuffer, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
-                    }
-                }
+                EnsureDrawBuffer(matrices.Count);
+                matrices.CopyTo(drawBuffer);
+
+                DrawInstanced(data.mesh, data.materials, drawBuffer, matrices.Count,
+                    UnityEngine.Rendering.ShadowCastingMode.On);
             }
         }
 

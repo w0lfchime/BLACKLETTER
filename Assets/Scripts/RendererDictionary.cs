@@ -1,4 +1,5 @@
 using System;
+using GameLogic;
 using UnityEngine;
 
 [Serializable]
@@ -25,4 +26,13 @@ public class RendererDictionary : MonoBehaviour
     {
         visualDataArray = visualDataArrayInspector;
     }
+
+    #if UNITY_EDITOR
+    private void OnValidate()
+    {
+        visualDataArray = visualDataArrayInspector;
+        if (Application.isPlaying)
+            GridView.I?.MarkEntitiesDirty();
+    }
+    #endif
 }

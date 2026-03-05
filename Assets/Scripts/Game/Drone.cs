@@ -7,7 +7,7 @@ using DG.Tweening;
 namespace GameLogic
 {
 
-    public class Drone : GPUEntity, IOnClock
+    public class Drone : GridEntity, IOnClock
     {
 
 

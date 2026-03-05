@@ -5,7 +5,7 @@ using DG.Tweening;
 namespace GameLogic
 {
 
-    public class Hub : GPUEntity
+    public class Hub : GridEntity
     {
         
 
