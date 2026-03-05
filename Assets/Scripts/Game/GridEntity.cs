@@ -14,6 +14,11 @@ namespace GameLogic
         West
     }
 
+    public struct EntityAction
+    {
+        public int TickDuration;
+    }
+
     public abstract class GridEntity : MonoBehaviour
     {
 
