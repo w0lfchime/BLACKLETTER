@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
@@ -20,10 +20,6 @@ namespace GameLogic
         [SerializeField] private Mesh tileMesh;
         [SerializeField] private Material[] tileMaterials; // Must have GPU Instancing enabled!
 
-        [Header("Tile LOD")]
-        [SerializeField] private float lodHeight = 30f; // camera Y above which LOD mesh is used
-        private Mesh tileMeshLOD;
-
         [Header("Wall Tiles (edges)")]
         [SerializeField] private Mesh wallMesh;
         [SerializeField] private Material[] wallMaterials;
@@ -44,8 +40,8 @@ namespace GameLogic
         private int tileCount, wallCount, cornerCount, prevSx, prevSz;
         private bool tileAnimDone, wallAnimDone, cornerAnimDone;
         
-        // Reusable batch buffer (avoids allocating every frame)
-        private Matrix4x4[] batchBuffer = new Matrix4x4[1023];
+        // Reusable draw buffer (growable, replaces old 1023-limit batch buffer)
+        private Matrix4x4[] drawBuffer = new Matrix4x4[1024];
 
         // Visible grid range (computed from camera each frame)
         private int visMinX, visMaxX, visMinZ, visMaxZ;
@@ -60,6 +56,10 @@ namespace GameLogic
         
         private MaterialPropertyBlock propertyBlock;
         private Camera cachedCam;
+        private float prevTileScale;
+        private Vector3 prevTileRotation;
+
+
 
         public void MarkEntitiesDirty() => entitiesDirty = true;
 
@@ -91,18 +91,7 @@ namespace GameLogic
 
             propertyBlock = new MaterialPropertyBlock();
             cachedCam = Camera.main;
-            if (cachedCam == null) cachedCam = FindObjectOfType<Camera>();
-
-            // Generate a simple quad mesh for LOD (XY plane, same orientation as typical tile meshes)
-            tileMeshLOD = new Mesh { name = "TileLOD_Quad" };
-            tileMeshLOD.vertices = new Vector3[] {
-                new(-0.5f, -0.5f, 0), new(0.5f, -0.5f, 0),
-                new(0.5f, 0.5f, 0), new(-0.5f, 0.5f, 0)
-            };
-            tileMeshLOD.triangles = new int[] { 0, 2, 1, 0, 3, 2 };
-            tileMeshLOD.normals = new Vector3[] { -Vector3.forward, -Vector3.forward, -Vector3.forward, -Vector3.forward };
-            tileMeshLOD.uv = new Vector2[] { new(0,0), new(1,0), new(1,1), new(0,1) };
-            tileMeshLOD.colors = new Color[] { Color.white, Color.white, Color.white, Color.white };
+            if (cachedCam == null) cachedCam = FindAnyObjectByType<Camera>();
 
             Rebuild(force: true);
         }
@@ -113,12 +102,25 @@ namespace GameLogic
             Vector3 bs = Vector3.one * tileScale * positionMultiplier;
             Quaternion br = Quaternion.Euler(tileRotation);
 
+            // Detect Inspector changes to tileScale / tileRotation and rebuild matrices
+            if (tileScale != prevTileScale || tileRotation != prevTileRotation)
+            {
+                prevTileScale = tileScale;
+                prevTileRotation = tileRotation;
+                if (tileAnimDone && tileMatrices != null)
+                {
+                    for (int i = 0; i < tileCount; i++)
+                        tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs);
+                    entitiesDirty = true;
+                    wallAnimDone = false;
+                    cornerAnimDone = false;
+                }
+            }
+
             // Animate tiles
             if (tileMesh != null && tileMaterials?.Length > 0 && tileMatrices != null)
             {
                 ComputeVisibleRange();
-                if (Time.frameCount % 60 == 0)
-                    Debug.Log($"VisRange: X[{visMinX}..{visMaxX}] Z[{visMinZ}..{visMaxZ}] = {(visMaxX-visMinX+1)*(visMaxZ-visMinZ+1)} tiles of {tileCount} total. CamPos={cachedCam?.transform.position}");
 
                 if (!tileAnimDone)
                 {
@@ -135,8 +137,7 @@ namespace GameLogic
                 }
 
                 // Draw only visible tiles
-                bool useLOD = tileMeshLOD != null && cachedCam != null && cachedCam.transform.position.y > lodHeight;
-                DrawVisibleTiles(useLOD ? tileMeshLOD : tileMesh, tileMaterials);
+                DrawVisibleTiles(tileMesh, tileMaterials);
             }
 
             // Animate walls
@@ -157,16 +158,26 @@ namespace GameLogic
             DrawEntities();
         }
 
-        private void DrawInstanced(Mesh mesh, Material[] mats, Matrix4x4[] matrices, int count)
+        private void EnsureDrawBuffer(int minSize)
         {
+            if (drawBuffer.Length < minSize)
+                drawBuffer = new Matrix4x4[Mathf.NextPowerOfTwo(minSize)];
+        }
+
+        private void DrawInstanced(Mesh mesh, Material[] mats, Matrix4x4[] matrices, int count,
+            UnityEngine.Rendering.ShadowCastingMode shadows = UnityEngine.Rendering.ShadowCastingMode.Off)
+        {
+            if (count == 0 || mesh == null) return;
             for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
-                if (mats[sub] != null)
-                    for (int i = 0; i < count; i += 1023)
-                    {
-                        int batchSize = Mathf.Min(1023, count - i);
-                        System.Array.Copy(matrices, i, batchBuffer, 0, batchSize);
-                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
-                    }
+            {
+                if (mats[sub] == null) continue;
+                var rp = new RenderParams(mats[sub])
+                {
+                    shadowCastingMode = shadows,
+                    matProps = propertyBlock
+                };
+                Graphics.RenderMeshInstanced(rp, mesh, sub, matrices, count);
+            }
         }
 
         private void ComputeVisibleRange()
@@ -236,27 +247,17 @@ namespace GameLogic
 
         private void DrawVisibleTiles(Mesh mesh, Material[] mats)
         {
-            int batchCount = 0;
+            int maxVisible = (visMaxX - visMinX + 1) * (visMaxZ - visMinZ + 1);
+            if (maxVisible <= 0) return;
+
+            EnsureDrawBuffer(maxVisible);
+
+            int count = 0;
             for (int x = visMinX; x <= visMaxX; x++)
-            {
                 for (int z = visMinZ; z <= visMaxZ; z++)
-                {
-                    batchBuffer[batchCount++] = tileMatrices[tileIndex[x, z]];
-                    if (batchCount == 1023)
-                    {
-                        for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
-                            if (mats[sub] != null)
-                                Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchCount, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
-                        batchCount = 0;
-                    }
-                }
-            }
-            if (batchCount > 0)
-            {
-                for (int sub = 0; sub < mesh.subMeshCount && sub < mats.Length; sub++)
-                    if (mats[sub] != null)
-                        Graphics.DrawMeshInstanced(mesh, sub, mats[sub], batchBuffer, batchCount, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.Off);
-            }
+                    drawBuffer[count++] = tileMatrices[tileIndex[x, z]];
+
+            DrawInstanced(mesh, mats, drawBuffer, count);
         }
 
         private void DrawEntities()
@@ -322,16 +323,11 @@ namespace GameLogic
                 GridVisualData data = RendererDictionary.visualDataArray[kvp.Key];
                 var matrices = kvp.Value;
 
-                for (int sub = 0; sub < data.mesh.subMeshCount && sub < data.materials.Length; sub++)
-                {
-                    if (data.materials[sub] == null) continue;
-                    for (int i = 0; i < matrices.Count; i += 1023)
-                    {
-                        int batchSize = Mathf.Min(1023, matrices.Count - i);
-                        for (int j = 0; j < batchSize; j++) batchBuffer[j] = matrices[i + j];
-                        Graphics.DrawMeshInstanced(data.mesh, sub, data.materials[sub], batchBuffer, batchSize, propertyBlock, UnityEngine.Rendering.ShadowCastingMode.On);
-                    }
-                }
+                EnsureDrawBuffer(matrices.Count);
+                matrices.CopyTo(drawBuffer);
+
+                DrawInstanced(data.mesh, data.materials, drawBuffer, matrices.Count,
+                    UnityEngine.Rendering.ShadowCastingMode.On);
             }
         }
 

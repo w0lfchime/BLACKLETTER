@@ -632,8 +632,8 @@ MonoBehaviour:
   Hub: {fileID: 3491106165475578014, guid: 55bbea8bb01c4e14b93b015b4fe41e60, type: 3}
   entities: []
   Drones: []
-  Width: 13
-  Height: 13
+  Width: 200
+  Height: 200
   initOnAwake: 1
   rebuildOnValidate: 1
 --- !u!114 &1144014722
@@ -652,7 +652,7 @@ MonoBehaviour:
   - Position: {x: 0, y: 0}
     Stackable: 0
     visualDataIndex: 0
-  amount: 100
+  amount: 10000
 --- !u!1 &1256676563
 GameObject:
   m_ObjectHideFlags: 0
@@ -989,7 +989,6 @@ MonoBehaviour:
   tileMaterials:
   - {fileID: 2100000, guid: 146ecb7d20450cd48a16fafafb0822ac, type: 2}
   - {fileID: 2100000, guid: f9a86262387268246a340ebec33aebfa, type: 2}
-  lodHeight: 30
   wallMesh: {fileID: -6416487109790020563, guid: 5ef36d09a393d0f4e9749dcb0f0c2cd2, type: 3}
   wallMaterials:
   - {fileID: 2100000, guid: 146ecb7d20450cd48a16fafafb0822ac, type: 2}
@@ -1057,7 +1056,7 @@ MonoBehaviour:
   zoomSpeed: 10
   zoomSmoothFactor: 12
   minZoomDistance: 5
-  maxZoomDistance: 40
+  maxZoomDistance: 100
   ZoomPitchFactor: 0.2
   MaxZoomPitchEffect: 150
 --- !u!4 &1822903124
