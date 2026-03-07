@@ -63,8 +63,8 @@ namespace GameLogic
 
         public void MarkEntitiesDirty() => entitiesDirty = true;
 
-        public int SizeX => Grid.I != null ? Grid.I.Width : 0;
-        public int SizeZ => Grid.I != null ? Grid.I.Height : 0; // backend Height maps to view Z
+        public int SizeX => GameGrid.I != null ? GameGrid.I.Width : 0;
+        public int SizeZ => GameGrid.I != null ? GameGrid.I.Height : 0; // backend Height maps to view Z
 
         private void Awake()
         {
@@ -83,7 +83,7 @@ namespace GameLogic
 
         private void Start()
         {
-            if (Grid.I == null || !Grid.I.IsReady)
+            if (GameGrid.I == null || !GameGrid.I.IsReady)
             {
                 Debug.LogError("GridView requires Grid.I to exist and be initialized before GridView.Start().");
                 return;
@@ -262,7 +262,7 @@ namespace GameLogic
 
         private void DrawEntities()
         {
-            if (Grid.I == null || Grid.I.entities == null) return;
+            if (GameGrid.I == null || GameGrid.I.entities == null) return;
 
             // Check if camera moved
             Camera cam = cachedCam;
@@ -281,7 +281,7 @@ namespace GameLogic
                 // Clear lists but keep the dictionary to avoid re-allocating
                 foreach (var list in entityGroups.Values) list.Clear();
 
-                foreach (var entity in Grid.I.entities)
+                foreach (var entity in GameGrid.I.entities)
                 {
                     GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
                     if (data.mesh == null || data.materials == null || data.materials.Length == 0) continue;
@@ -333,9 +333,9 @@ namespace GameLogic
 
         public void Rebuild(bool force = false)
         {
-            if (Grid.I == null || !Grid.I.IsReady) { Debug.LogError("Cannot build GridView: backend Grid is missing or not ready."); return; }
+            if (GameGrid.I == null || !GameGrid.I.IsReady) { Debug.LogError("Cannot build GridView: backend Grid is missing or not ready."); return; }
 
-            int sx = Grid.I.Width, sz = Grid.I.Height, n = sx * sz;
+            int sx = GameGrid.I.Width, sz = GameGrid.I.Height, n = sx * sz;
             if (!force && tileMatrices != null && tileCount == n && prevSx == sx && prevSz == sz) return;
 
             bool sizeChanged = prevSx != sx || prevSz != sz;
@@ -487,18 +487,18 @@ namespace GameLogic
 
         public Tile GetBackendTile(Vector3Int gridPos)
         {
-            if (Grid.I == null || !Grid.I.IsReady) return null;
+            if (GameGrid.I == null || !GameGrid.I.IsReady) return null;
             gridPos = LoopGridPosition(gridPos);
-            return Grid.I.Get(gridPos.x, gridPos.z);
+            return GameGrid.I.Get(gridPos.x, gridPos.z);
         }
 
         private void OnDrawGizmosSelected()
         {
             if (!Application.isPlaying) return;
-            if (Grid.I == null || !Grid.I.IsReady) return;
+            if (GameGrid.I == null || !GameGrid.I.IsReady) return;
 
-            int sx = Grid.I.Width;
-            int sz = Grid.I.Height;
+            int sx = GameGrid.I.Width;
+            int sz = GameGrid.I.Height;
             if (sx * sz > 2500) return; // skip gizmos for large grids
 
             Gizmos.color = Color.white;

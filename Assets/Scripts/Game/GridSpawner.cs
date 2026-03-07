@@ -13,14 +13,14 @@ public class GridSpawner : MonoBehaviour
         GridEntityData oreDataCopy = new GridEntityData();
         oreDataCopy.visualDataIndex = oreData.visualDataIndex;
 
-        oreDataCopy.Position = new Vector2Int(UnityEngine.Random.Range(0, GameLogic.Grid.I.Width), UnityEngine.Random.Range(0, GameLogic.Grid.I.Height));
+        oreDataCopy.Position = new Vector2Int(UnityEngine.Random.Range(0, GameLogic.GameGrid.I.Width), UnityEngine.Random.Range(0, GameLogic.GameGrid.I.Height));
         return oreDataCopy;
     }
 
     void Start()
     {
         for(int i = 0; i < amount; i++){
-            GameLogic.Grid.I.entities.Add(CreateOre());
+            GameLogic.GameGrid.I.entities.Add(CreateOre());
         }
     }
 }

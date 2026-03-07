@@ -8,13 +8,13 @@ public class PointerCast : MonoBehaviour
     public float delay = .5f;
     float timer = 0f;
     
-    public static GridDirection GetArrowKeyVector()
+    public static AdjacentDirection GetArrowKeyVector()
     {
-        if (Input.GetKey(KeyCode.UpArrow)) return GridDirection.North;
-        if (Input.GetKey(KeyCode.DownArrow)) return GridDirection.South;
-        if (Input.GetKey(KeyCode.RightArrow)) return GridDirection.East;
-        if (Input.GetKey(KeyCode.LeftArrow)) return GridDirection.West;
-        return GridDirection.Null;
+        if (Input.GetKey(KeyCode.UpArrow)) return AdjacentDirection.North;
+        if (Input.GetKey(KeyCode.DownArrow)) return AdjacentDirection.South;
+        if (Input.GetKey(KeyCode.RightArrow)) return AdjacentDirection.East;
+        if (Input.GetKey(KeyCode.LeftArrow)) return AdjacentDirection.West;
+        return AdjacentDirection.Null;
     }
     
     void LateUpdate()
@@ -42,12 +42,12 @@ public class PointerCast : MonoBehaviour
 
     void FixedUpdate()
     {
-        if(GetArrowKeyVector() != GridDirection.Null)
+        if(GetArrowKeyVector() != AdjacentDirection.Null)
         {
             timer += Time.fixedDeltaTime;
             if(timer >= delay)
             {
-                GameLogic.Grid.I.Drones[0].SingleStepInDirection(GetArrowKeyVector(), delay);
+                GameLogic.GameGrid.I.Drones[0].SingleStepInDirection(GetArrowKeyVector(), delay);
                 timer = 0f;
             }
         }

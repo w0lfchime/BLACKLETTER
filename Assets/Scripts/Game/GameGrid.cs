@@ -25,10 +25,10 @@ namespace GameLogic
     }
 
 
-    public sealed class Grid : MonoBehaviour
+    public sealed class GameGrid : MonoBehaviour
     {
         public GameObject Drone, Hub;
-        public static Grid I { get; private set; }
+        public static GameGrid I { get; private set; }
 
         public List<GridEntityData> entities;
 
@@ -155,7 +155,7 @@ namespace GameLogic
         public Tile[] RawTiles => tiles;
 
 
-        public Vector2Int WrapPosition(Vector2Int position)
+        public Vector2Int GetPositionWrapped(Vector2Int position)
         {
             int x = (position.x % Width + Width) % Width;
             int y = (position.y % Height + Height) % Height;

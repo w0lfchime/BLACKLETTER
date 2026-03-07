@@ -544,7 +544,7 @@ MonoBehaviour:
   - Position: {x: 0, y: 0}
     Stackable: 0
     visualDataIndex: 0
-  amount: 10
+  amount: 20
 --- !u!1 &1447649068
 GameObject:
   m_ObjectHideFlags: 0
