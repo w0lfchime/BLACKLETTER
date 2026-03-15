@@ -1,33 +1,59 @@
-
-using System;
 using UnityEngine;
-using DG.Tweening;
-
 
 namespace GameLogic
 {
+	public class Drone : GridEntity, IOnClock
+	{
+		[Header("Action Limits")]
+		[SerializeField] private int maxQueuedMoveActions = 1;
 
-    public class Drone : GridEntity, IOnClock
-    {
+		protected override void Start()
+		{
+			maxQueuedMoveActions = 1;
+			base.Start();
+		}
 
+		public void SingleStepInDirection(AdjacentDirection direction, float time = 0f, bool wrapAroundEnabled = false)
+		{
+			Debug.Log("Stepping");
+			base.SingleStepInDirection(direction, wrapAroundEnabled);
+		}
 
-        public void SingleStepInDirection(AdjacentDirection direction, float time = 0f, bool wrapAroundEnabled = false) //ignore wrap for now
-        {
-            Vector2Int newPosition = Data.Position + GetDirectionVector(direction);
-            newPosition = GameGrid.I.GetPositionWrapped(newPosition);
-            View.GoToPosition(new Vector3Int(newPosition.x, (int)Height, newPosition.y), time);
+		public override bool CanAcceptAction(EntityAction action)
+		{
+			if (!base.CanAcceptAction(action)) return false;
 
-            Data.Position = newPosition;
-        }
+			if (action is MoveAction)
+			{
+				int queuedMoveActions = 0;
 
+				foreach (EntityAction queuedAction in actionQueue)
+				{
+					if (queuedAction is MoveAction)
+					{
+						queuedMoveActions++;
+					}
+				}
 
-        public void Tick(float dt, int tick)
-        {
+				bool currentActionIsMove = currentAction is MoveAction;
 
+				if (currentActionIsMove)
+				{
+					return false;
+				}
 
+				if (queuedMoveActions >= maxQueuedMoveActions)
+				{
+					return false;
+				}
+			}
 
-            return;
-        }
-    }
+			return true;
+		}
+
+		public override void Tick(float dt, int tick)
+		{
+			base.Tick(dt, tick);
+		}
+	}
 }
-

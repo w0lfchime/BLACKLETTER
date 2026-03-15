@@ -1,70 +1,53 @@
 using UnityEngine;
 
-
-
-
-public abstract class EntityAction
+namespace GameLogic
 {
-	public GameObject Entity;
-
-
-	public bool complete = false;
-	public int currentTick;
-	public int TickDuration;
-
-
-
-
-	public EntityAction(GameObject entity, int tickDuration)
+	public abstract class EntityAction
 	{
-		this.Entity = entity;
-		this.TickDuration = tickDuration;
+		public GameObject Entity;
 
+		public bool complete = false;
+		public int currentTick;
+		public int TickDuration;
 
-	}
-
-
-
-	public virtual void OnStart()
-	{
-		complete = false;
-		currentTick = 0;
-
-		if (TickDuration >= 0)
+		public EntityAction(GameObject entity, int tickDuration)
 		{
-			OnEnd();
+			Entity = entity;
+			TickDuration = tickDuration;
 		}
 
-		//...
-	}
-
-	public virtual void PerTick()
-	{
-		//...
-
-
-
-
-
-		if (currentTick >= TickDuration)
+		public virtual void OnStart()
 		{
-			complete = true;
+			complete = false;
+			currentTick = 0;
+
+			if (TickDuration <= 0)
+			{
+				complete = true;
+				OnEnd();
+			}
 		}
 
-		if (complete)
+		public virtual void PerTick()
 		{
-			OnEnd();
+			if (complete) return;
+
+			if (currentTick >= TickDuration)
+			{
+				complete = true;
+			}
+
+			if (complete)
+			{
+				OnEnd();
+				return;
+			}
+
+			currentTick++;
 		}
 
-		currentTick++;
+		public virtual void OnEnd()
+		{
+		}
 	}
-
-	public virtual void OnEnd()
-	{
-
-
-
-
-	}
-
 }

@@ -2,7 +2,7 @@ using GameLogic;
 using UnityEngine;
 using UnityEngineInternal;
 
-public abstract class ViewEntity : MonoBehaviour
+public abstract class EntityView : MonoBehaviour
 {
     public Transform MeshTransform;
 
