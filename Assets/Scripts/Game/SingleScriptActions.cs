@@ -6,51 +6,90 @@ using GameLogic;
 
 public class SingleScriptActions : MonoBehaviour
 {
+    public static SingleScriptActions I;
+    public Coroutine active;
+
+    void Awake()
+    {
+        I = this;
+    }
+
     [Serializable]
     public class GameFunction
     {
-        public Action DataAction;
-        public Action<GameFunction> VisualAction;
         public int Delay;
+        public Action<object[]> DataAction;
+        public Action<GameFunction, object[]> VisualAction;
     }
 
-    public GridEntity gridEntity;
-
-    public List<GameFunction> functions = new();
 
     //Functions - only player inputs for IDE
-    GameFunction DroneMoveFunction(AdjacentDirection direction) => new()
+
+    public GameFunction TestFunction => new()
     {
-        DataAction = () => gridEntity.SingleStepInDirection(direction),
-        VisualAction = (self) =>
+        //code delay time
+        Delay = 30,
+        //what the function does to the data (backend)
+        DataAction = (vars) =>
         {
-            if (gridEntity.View is DroneView droneView)
-                droneView.MoveBetween(
-                    gridEntity.Data.Position,
-                    gridEntity.Data.Position + gridEntity.GetDirectionVector(direction),
-                    self.Delay, 1f, Mathf.RoundToInt(gridEntity.Height));
+            
         },
-        Delay = 0
+        //what the function does visually (frontend)
+        VisualAction = (self, vars) =>
+        {
+            
+        }
     };
 
-    void Start()
+    public GameFunction DroneMoveFunction => new()
     {
-        GameFunction function = functions[0];
-        IDE_Function(function);
+        Delay = 30,
+        DataAction = (vars) =>
+        {
+            ((GridEntity)vars[0]).SingleStepInDirection((AdjacentDirection)vars[1]);
+        },
+        VisualAction = (self, vars) =>
+        {
+            if (((GridEntity)vars[0]).View is DroneView droneView)
+                droneView.MoveBetween(
+                    ((GridEntity)vars[0]).Data.Position,
+                    ((GridEntity)vars[0]).Data.Position + ((GridEntity)vars[0]).GetDirectionVector((AdjacentDirection)vars[1]),
+                    self.Delay, 1f, Mathf.RoundToInt(((GridEntity)vars[0]).Height));
+        }
+    };
+
+    //
+
+    //example test
+    IEnumerator Start()
+    {
+        yield return null;
+
+        GridEntity gridEntity = GameGrid.I.Drones[0];
+        IDE_Function(DroneMoveFunction, gridEntity, AdjacentDirection.East);
     }
 
-    //layout
-    public void IDE_Function(GameFunction function)
+    public void IDE_Function(GameFunction function, params object[] variables)
     {
-        StartCoroutine(RunAfterDelay(function.DataAction, function.Delay));
-        function.VisualAction(function);
+        if (active != null) return;
+
+        //execute visual action immediately, animates over Delay ticks
+        function.VisualAction(function, variables);
+
+        //execute data action after Delay ticks, so both complete at the same time
+        active = StartCoroutine(RunAfterDelay(() => function.DataAction(variables), function.Delay));
     }
 
     //just testing with IEnumerator
     public IEnumerator RunAfterDelay(Action action, int delayTicks)
     {
-        int startTick = Clock.I.tick;
-        yield return new WaitUntil(() => Clock.I.tick >= startTick + delayTicks);
+        if (delayTicks > 0)
+        {
+            int startTick = Clock.I.tick;
+            yield return new WaitUntil(() => Clock.I.tick >= startTick + delayTicks);
+        }
         action();
+        
+        active = null;
     }
 }

@@ -46,13 +46,14 @@ namespace GameLogic
 
 
 
-			bool accepted = drone.EnqueueAction(new MoveAction(drone.gameObject, moveTickDuration, currentDirection));
+			//bool accepted = drone.EnqueueAction(new MoveAction(drone.gameObject, moveTickDuration, currentDirection));
+			SingleScriptActions.I.IDE_Function(SingleScriptActions.I.DroneMoveFunction, drone, currentDirection);
 			
 
-			if (!accepted)
-			{
-				Debug.Log("Move action rejected");
-			}
+			// if (!accepted)
+			// {
+			// 	Debug.Log("Move action rejected");
+			// }
 		}
 
 		AdjacentDirection ReadArrowKeyDirection()
