@@ -55,41 +55,6 @@ namespace GameLogic
 			}
 		}
 
-
-		public void MoveDrone(GridEntity gridEntity, AdjacentDirection direction, int duration = 0)
-		{
-			//data action
-			RunAfterDelay(gridEntity.SingleStepInDirection(direction));
-
-			// visual action
-			if (gridEntity.View is DroneView droneView)
-			{
-				droneView.MoveBetween(
-					gridEntity.Data.Position,
-					gridEntity.Data.Position + gridEntity.GetDirectionVector(direction),
-					duration,
-					1f,
-					Mathf.RoundToInt(gridEntity.Height)
-				);
-			}
-		}
-
-		//layout
-		public void functionInIDE()
-		{
-			RunAfterDelay(Action);
-
-			if (gridEntity.View is DroneView droneView)
-			{
-				droneView.doanimation();
-			}
-		}
-
-		public void RunAfterDelay()
-		{
-			
-		}
-
 		AdjacentDirection ReadArrowKeyDirection()
 		{
 			bool up = Input.GetKey(KeyCode.UpArrow);
