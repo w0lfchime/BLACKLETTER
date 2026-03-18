@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace GameLogic
@@ -46,11 +47,47 @@ namespace GameLogic
 
 
 			bool accepted = drone.EnqueueAction(new MoveAction(drone.gameObject, moveTickDuration, currentDirection));
+			
 
 			if (!accepted)
 			{
 				Debug.Log("Move action rejected");
 			}
+		}
+
+
+		public void MoveDrone(GridEntity gridEntity, AdjacentDirection direction, int duration = 0)
+		{
+			//data action
+			RunAfterDelay(gridEntity.SingleStepInDirection(direction));
+
+			// visual action
+			if (gridEntity.View is DroneView droneView)
+			{
+				droneView.MoveBetween(
+					gridEntity.Data.Position,
+					gridEntity.Data.Position + gridEntity.GetDirectionVector(direction),
+					duration,
+					1f,
+					Mathf.RoundToInt(gridEntity.Height)
+				);
+			}
+		}
+
+		//layout
+		public void functionInIDE()
+		{
+			RunAfterDelay(Action);
+
+			if (gridEntity.View is DroneView droneView)
+			{
+				droneView.doanimation();
+			}
+		}
+
+		public void RunAfterDelay()
+		{
+			
 		}
 
 		AdjacentDirection ReadArrowKeyDirection()
