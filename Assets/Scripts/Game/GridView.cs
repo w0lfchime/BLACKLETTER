@@ -283,7 +283,7 @@ namespace GameLogic
 
                 foreach (var entity in GameGrid.I.entities)
                 {
-                    GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
+                    SharedEntityVisualData data = sharedDataDictionary.dataArray[entity.ID].sharedVisualData;
                     if (data.mesh == null || data.materials == null || data.materials.Length == 0) continue;
 
                     // Skip entities outside visible range
@@ -305,10 +305,10 @@ namespace GameLogic
                     Quaternion rot = Quaternion.Euler(data.rotation) * (data.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
                     Matrix4x4 matrix = Matrix4x4.TRS(worldPos, rot, scale * positionMultiplier);
 
-                    if (!entityGroups.TryGetValue(entity.visualDataIndex, out var list))
+                    if (!entityGroups.TryGetValue(entity.ID, out var list))
                     {
                         list = new List<Matrix4x4>();
-                        entityGroups[entity.visualDataIndex] = list;
+                        entityGroups[entity.ID] = list;
                     }
                     list.Add(matrix);
                 }
@@ -320,7 +320,7 @@ namespace GameLogic
             foreach (var kvp in entityGroups)
             {
                 if (kvp.Value.Count == 0) continue;
-                GridVisualData data = RendererDictionary.visualDataArray[kvp.Key];
+                SharedEntityVisualData data = sharedDataDictionary.dataArray[kvp.Key].sharedVisualData;
                 var matrices = kvp.Value;
 
                 EnsureDrawBuffer(matrices.Count);

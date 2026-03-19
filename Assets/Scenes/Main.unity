@@ -589,9 +589,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Ores:
-  - Position: {x: 0, y: 0}
-    Stackable: 0
-    visualDataIndex: 0
+  - ID: 0
+    Position: {x: 0, y: 0}
   amount: 20
 --- !u!1 &1243765649
 GameObject:
@@ -622,8 +621,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f726fa6cadf85d4e8c2d715c18c9799, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridEntity: {fileID: 0}
-  functions: []
 --- !u!4 &1243765651
 Transform:
   m_ObjectHideFlags: 0
@@ -885,18 +882,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 1609169748}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6d51b5b72a6b62429f20bc3a569c6a0, type: 3}
+  m_Script: {fileID: 11500000, guid: 8835edd5ffdb04b4fb6bf7574b2715e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visualDataArrayInspector:
-  - mesh: {fileID: 6304961352343156586, guid: 596ad526e3c120645b05645b8a42c7a4, type: 3}
-    materials:
-    - {fileID: 2100000, guid: 6739f7b6d77d5054e94a698609d0780e, type: 2}
-    - {fileID: 2100000, guid: ec3fe83eecd93fb4c96097a56617cf75, type: 2}
-    scale: 125
-    rotation: {x: -90, y: 0, z: 0}
-    Height: 0.2
-    randomRotation: 1
+  dataArrayInspector:
+  - ID: 0
+    sharedVisualData:
+      mesh: {fileID: 6304961352343156586, guid: 596ad526e3c120645b05645b8a42c7a4, type: 3}
+      materials:
+      - {fileID: 2100000, guid: 6739f7b6d77d5054e94a698609d0780e, type: 2}
+      - {fileID: 2100000, guid: ec3fe83eecd93fb4c96097a56617cf75, type: 2}
+      scale: 125
+      rotation: {x: -90, y: 0, z: 0}
+      Height: 0.2
+      randomRotation: 1
+    sharedData:
+      stackable: 0
+      lootTable: 0
 --- !u!1 &1822903122
 GameObject:
   m_ObjectHideFlags: 0
