@@ -7,8 +7,12 @@ namespace GameLogic
 	[Serializable]
 	public class GridEntityData
 	{
+		//variables that need to be individual per entity
 		public Vector2Int Position;
 		public bool Stackable;
+
+		//variables that are shared across all entities
+		public int dataIndex;
 		public int visualDataIndex;
 	}
 

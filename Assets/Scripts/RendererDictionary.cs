@@ -3,7 +3,7 @@ using GameLogic;
 using UnityEngine;
 
 [Serializable]
-public class GridVisualData
+public class SharedEntityVisualData
 {
     public Mesh mesh;
     public Material[] materials;
@@ -12,10 +12,22 @@ public class GridVisualData
     public float Height;
     public bool randomRotation;
 }
+
+[Serializable]
+public class SharedEntityData
+{
+    public Mesh mesh;
+    public Material[] materials;
+    public float scale;
+    public Vector3 rotation;
+    public float Height;
+    public bool randomRotation;
+}
+
 public class RendererDictionary : MonoBehaviour
 {
-    public GridVisualData[] visualDataArrayInspector;
-    public static GridVisualData[] visualDataArray;
+    public SharedEntityVisualData[] visualDataArrayInspector;
+    public static SharedEntityVisualData[] visualDataArray;
 
     void Start()
     {
