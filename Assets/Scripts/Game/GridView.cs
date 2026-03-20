@@ -124,14 +124,30 @@ namespace GameLogic
 
                 if (!tileAnimDone)
                 {
+                    // Only animate visible tiles — off-screen tiles snap to final state
                     bool allDone = true;
+                    float step = dt * speed;
                     for (int i = 0; i < tileCount; i++)
                     {
-                        if (tileAnim[i] >= 1f) continue;
-                        tileAnim[i] = Mathf.MoveTowards(tileAnim[i], 1f, dt * speed);
-                        float t = Mathf.Clamp01(tileAnim[i]);
-                        tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs * DOVirtual.EasedValue(0f, 1f, t, animEase));
-                        if (t < 1f) allDone = false;
+                        float a = tileAnim[i];
+                        if (a >= 1f) continue;
+                        a = Mathf.MoveTowards(a, 1f, step);
+                        tileAnim[i] = a;
+                        if (a < 1f)
+                        {
+                            allDone = false;
+                            // Only compute TRS for visible tiles
+                            int x = i / prevSz, z = i % prevSz;
+                            if (x >= visMinX && x <= visMaxX && z >= visMinZ && z <= visMaxZ)
+                            {
+                                float t = Mathf.Clamp01(a);
+                                tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs * DOVirtual.EasedValue(0f, 1f, t, animEase));
+                            }
+                        }
+                        else
+                        {
+                            tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs);
+                        }
                     }
                     if (allDone) { tileAnimDone = true; entitiesDirty = true; }
                 }
@@ -140,18 +156,21 @@ namespace GameLogic
                 DrawVisibleTiles(tileMesh, tileMaterials);
             }
 
-            // Animate walls
+            // Animate walls (only when visible — walls are at grid edges)
             if (wallMesh != null && wallMaterials?.Length > 0 && wallMatrices != null)
             {
                 if (!wallAnimDone) UpdateWalls(dt, speed, bs, br);
-                DrawInstanced(wallMesh, wallMaterials, wallMatrices, wallCount);
+                // Only draw walls if camera can see the grid edges
+                if (visMinX <= 0 || visMaxX >= SizeX - 1 || visMinZ <= 0 || visMaxZ >= SizeZ - 1)
+                    DrawInstanced(wallMesh, wallMaterials, wallMatrices, wallCount);
             }
 
-            // Animate corners
+            // Animate corners (only when visible)
             if (cornerMesh != null && cornerMaterials?.Length > 0 && cornerMatrices != null)
             {
                 if (!cornerAnimDone) UpdateCorners(dt, speed, bs, br);
-                DrawInstanced(cornerMesh, cornerMaterials, cornerMatrices, cornerCount);
+                if (visMinX <= 0 || visMaxX >= SizeX - 1 || visMinZ <= 0 || visMaxZ >= SizeZ - 1)
+                    DrawInstanced(cornerMesh, cornerMaterials, cornerMatrices, cornerCount);
             }
 
             // Draw entities from backend
