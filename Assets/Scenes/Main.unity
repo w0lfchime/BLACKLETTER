@@ -629,8 +629,8 @@ MonoBehaviour:
   Hub: {fileID: 3491106165475578014, guid: 55bbea8bb01c4e14b93b015b4fe41e60, type: 3}
   entities: []
   Drones: []
-  Width: 21
-  Height: 21
+  Width: 200
+  Height: 200
   initOnAwake: 1
   rebuildOnValidate: 1
 --- !u!114 &1144014722
@@ -648,7 +648,7 @@ MonoBehaviour:
   Ores:
   - ID: 0
     Position: {x: 0, y: 0}
-  amount: 50
+  amount: 10000
 --- !u!1 &1243765649
 GameObject:
   m_ObjectHideFlags: 0
