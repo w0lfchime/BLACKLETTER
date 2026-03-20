@@ -175,18 +175,48 @@ namespace GameLogic
         
         public GridEntityData BreakEntityAt(Vector2Int position)
         {
-            GridEntityData entity = RemoveEntityAt(position);
-            if (entity != null)
+            GridEntityData entity = entities.Find(e => e.Position == position);
+            if (entity == null) return null;
+            if (!sharedDataDictionary.dataArray.TryGetValue(entity.ID, out var data) || !data.sharedData.breakable) return null;
+            RemoveEntityAt(position);
+            if (GridView.I != null)
             {
-                if (GridView.I != null && sharedDataDictionary.dataArray.TryGetValue(entity.ID, out var data))
-                {
-                    Vector3 worldPos = GridView.I.GridToWorld(new Vector3(position.x, data.sharedVisualData.Height, position.y));
-                    GridView.I.SpawnBreakEffect(entity.ID, worldPos, data.sharedVisualData.scale, position);
-                    GridView.I.MarkEntitiesDirty();
-                }
-                return entity;
+                Vector3 worldPos = GridView.I.GridToWorld(new Vector3(position.x, data.sharedVisualData.Height, position.y));
+                GridView.I.SpawnBreakEffect(entity.ID, worldPos, data.sharedVisualData.scale, position);
+                foreach(int lootID in TableToIDs(data.sharedData.lootTable)) SpawnEntity(lootID, position);
+                GridView.I.MarkEntitiesDirty();
             }
-            return null;
+            return entity;
+        }
+
+        public List<int> TableToIDs(List<TableData> table, int count = 1)
+        {
+            int totalWeight = 0;
+            List<int> result = new List<int>();
+            foreach (var entry in table)
+            {
+                totalWeight += entry.Weight;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                float randomWeight = Random.Range(0f, totalWeight);
+                foreach (var entry in table)
+                {
+                    if (randomWeight <= entry.Weight)
+                    {
+                        result.Add(entry.ID);
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        public bool SpawnEntity(int entityID, Vector2Int position)
+        {
+            GridEntityData entityData = new GridEntityData { ID = entityID, Position = position };
+            entities.Add(entityData);
+            return true;
         }
     }
 }

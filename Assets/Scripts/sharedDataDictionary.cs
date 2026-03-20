@@ -4,6 +4,14 @@ using GameLogic;
 using UnityEngine;
 
 [Serializable]
+public class TableData
+{
+    public int Weight;
+    public int ID;
+
+}
+
+[Serializable]
 public class SharedEntityVisualData
 {
     public Mesh mesh;
@@ -21,7 +29,7 @@ public class SharedEntityData
 {
     public bool stackable;
     public bool breakable;
-    public List<Vector2Int> lootTable;
+    public List<TableData> lootTable;
 }
 
 [Serializable]
