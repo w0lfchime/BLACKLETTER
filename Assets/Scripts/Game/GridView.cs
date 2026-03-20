@@ -59,6 +59,24 @@ namespace GameLogic
         private float prevTileScale;
         private Vector3 prevTileRotation;
 
+        // Break effect data
+        private struct BreakFragment
+        {
+            public int entityID;
+            public int fragmentIndex;
+            public Vector3 startPos;
+            public Vector3 velocity;
+            public float elapsed;
+            public float duration;
+            public float startScale;
+            public Quaternion baseRotation;
+        }
+        private readonly List<BreakFragment> breakFragments = new();
+        private const float breakGravity = -15f;
+        private const float breakDuration = 0.8f;
+        private const float breakSpreadForce = 3f;
+        private const float breakUpForce = 5f;
+
 
 
         public void MarkEntitiesDirty() => entitiesDirty = true;
@@ -175,6 +193,10 @@ namespace GameLogic
 
             // Draw entities from backend
             DrawEntities();
+
+            // Draw break fragments
+            if (breakFragments.Count > 0)
+                UpdateAndDrawBreakFragments(Time.deltaTime);
         }
 
         private void EnsureDrawBuffer(int minSize)
@@ -347,6 +369,81 @@ namespace GameLogic
 
                 DrawInstanced(data.mesh, data.materials, drawBuffer, matrices.Count,
                     UnityEngine.Rendering.ShadowCastingMode.On);
+            }
+        }
+
+        public void SpawnBreakEffect(int entityID, Vector3 worldPos, float entityScale, Vector2Int gridPos)
+        {
+            if (!sharedDataDictionary.dataArray.TryGetValue(entityID, out var entityData)) return;
+            var splitMeshes = entityData.sharedVisualData.splitMeshes;
+            if (splitMeshes == null) return;
+
+            int count = splitMeshes.Length;
+            float angleStep = 360f / count;
+            var visData = entityData.sharedVisualData;
+            float hash = Mathf.Abs((Mathf.Sin(gridPos.x * 127.1f + gridPos.y * 311.7f) * 43758.5453f) % 1f);
+            Quaternion baseRot = Quaternion.Euler(visData.rotation) * (visData.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
+
+            for (int i = 0; i < count; i++)
+            {
+                float angle = (angleStep * i + Random.Range(-15f, 15f)) * Mathf.Deg2Rad;
+                Vector3 dir = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                Vector3 vel = dir * (breakSpreadForce + Random.Range(-0.5f, 0.5f))
+                            + Vector3.up * (breakUpForce + Random.Range(-1f, 1f));
+
+                breakFragments.Add(new BreakFragment
+                {
+                    entityID = entityID,
+                    fragmentIndex = i,
+                    startPos = worldPos,
+                    velocity = vel,
+                    elapsed = 0f,
+                    duration = breakDuration + Random.Range(-0.1f, 0.1f),
+                    startScale = entityScale * positionMultiplier,
+                    baseRotation = baseRot
+                });
+            }
+        }
+
+        private void UpdateAndDrawBreakFragments(float dt)
+        {
+            // Group fragment matrices by (entityID, fragmentIndex) for instanced drawing
+            // In practice, each fragment mesh is unique so we draw them individually
+            for (int i = breakFragments.Count - 1; i >= 0; i--)
+            {
+                var frag = breakFragments[i];
+                frag.elapsed += dt;
+
+                if (frag.elapsed >= frag.duration)
+                {
+                    breakFragments.RemoveAt(i);
+                    continue;
+                }
+
+                breakFragments[i] = frag;
+
+                float t = frag.elapsed;
+                float normalizedT = frag.elapsed / frag.duration;
+
+                // Parabolic arc: pos = start + vel*t + 0.5*gravity*t^2
+                Vector3 pos = frag.startPos + frag.velocity * t
+                            + Vector3.up * (0.5f * breakGravity * t * t);
+
+                // Scale down over lifetime
+                float scale = frag.startScale * (1f - normalizedT * normalizedT);
+
+                // Start at entity's base rotation, then tumble gently
+                Quaternion tumble = Quaternion.Euler(t * 40f * (frag.fragmentIndex % 3 == 0 ? 1 : -1),
+                                                     t * 60f,
+                                                     t * 30f * (frag.fragmentIndex % 2 == 0 ? 1 : -1));
+                Quaternion rot = tumble * frag.baseRotation;
+
+                var entityData = sharedDataDictionary.dataArray[frag.entityID];
+                Mesh fragMesh = entityData.sharedVisualData.splitMeshes[frag.fragmentIndex];
+                if (fragMesh == null || fragMesh.vertexCount == 0) continue;
+
+                drawBuffer[0] = Matrix4x4.TRS(pos, rot, Vector3.one * scale);
+                DrawInstanced(fragMesh, entityData.sharedVisualData.materials, drawBuffer, 1);
             }
         }
 

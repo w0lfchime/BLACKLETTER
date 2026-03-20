@@ -161,5 +161,32 @@ namespace GameLogic
             int y = (position.y % Height + Height) % Height;
             return new Vector2Int(x, y);
         }
+
+        public GridEntityData RemoveEntityAt(Vector2Int position)
+        {
+            GridEntityData entity = entities.Find(e => e.Position == position);
+            if (entity != null)
+            {
+                entities.Remove(entity);
+                return entity;
+            }
+            return null;
+        }
+        
+        public GridEntityData BreakEntityAt(Vector2Int position)
+        {
+            GridEntityData entity = RemoveEntityAt(position);
+            if (entity != null)
+            {
+                if (GridView.I != null && sharedDataDictionary.dataArray.TryGetValue(entity.ID, out var data))
+                {
+                    Vector3 worldPos = GridView.I.GridToWorld(new Vector3(position.x, data.sharedVisualData.Height, position.y));
+                    GridView.I.SpawnBreakEffect(entity.ID, worldPos, data.sharedVisualData.scale, position);
+                    GridView.I.MarkEntitiesDirty();
+                }
+                return entity;
+            }
+            return null;
+        }
     }
 }

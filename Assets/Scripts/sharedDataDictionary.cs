@@ -7,6 +7,8 @@ using UnityEngine;
 public class SharedEntityVisualData
 {
     public Mesh mesh;
+    public Mesh[] splitMeshes;
+    public int splitCount = 8;
     public Material[] materials;
     public float scale;
     public Vector3 rotation;
@@ -18,7 +20,8 @@ public class SharedEntityVisualData
 public class SharedEntityData
 {
     public bool stackable;
-    public int lootTable;
+    public bool breakable;
+    public List<Vector2Int> lootTable;
 }
 
 [Serializable]
@@ -43,7 +46,16 @@ public class sharedDataDictionary : MonoBehaviour
     {
         dataArray = new Dictionary<int, EntityData>();
         foreach (var entry in dataArrayInspector)
+        {
             dataArray[entry.ID] = entry;
+
+            // Pre-split meshes for breakable entities
+            if (entry.sharedData != null && entry.sharedData.breakable
+                && entry.sharedVisualData?.mesh != null)
+            {
+                entry.sharedVisualData.splitMeshes = MeshSplitter.Split(entry.sharedVisualData.mesh, entry.sharedVisualData.splitCount);
+            }
+        }
     }
 
     #if UNITY_EDITOR

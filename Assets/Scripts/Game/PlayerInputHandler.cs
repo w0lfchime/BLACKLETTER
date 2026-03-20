@@ -38,6 +38,8 @@ namespace GameLogic
 			previousDirection = currentDirection;
 			currentDirection = ReadArrowKeyDirection();
 
+			if(Input.GetKey(KeyCode.Space)) GameGrid.I.BreakEntityAt(drone.Data.Position);
+
 			bool newDirectionalPress =
 				currentDirection != AdjacentDirection.Null &&
 				currentDirection != previousDirection;
