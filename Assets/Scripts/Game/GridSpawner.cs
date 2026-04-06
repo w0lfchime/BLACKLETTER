@@ -11,7 +11,7 @@ public class GridSpawner : MonoBehaviour
     {
         GridEntityData oreData = Ores[UnityEngine.Random.Range(0, Ores.Count)];
         GridEntityData oreDataCopy = new GridEntityData();
-        oreDataCopy.visualDataIndex = oreData.visualDataIndex;
+        oreDataCopy.ID = oreData.ID;
 
         oreDataCopy.Position = new Vector2Int(UnityEngine.Random.Range(0, GameLogic.GameGrid.I.Width), UnityEngine.Random.Range(0, GameLogic.GameGrid.I.Height));
         return oreDataCopy;

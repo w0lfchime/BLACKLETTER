@@ -7,9 +7,11 @@ namespace GameLogic
 	[Serializable]
 	public class GridEntityData
 	{
+		//used to search for shared entity data
+		public int ID;
+
+		//variables that need to be individual per entity
 		public Vector2Int Position;
-		public bool Stackable;
-		public int visualDataIndex;
 	}
 
 	public abstract class GridEntity : MonoBehaviour, IOnClock

@@ -59,6 +59,24 @@ namespace GameLogic
         private float prevTileScale;
         private Vector3 prevTileRotation;
 
+        // Break effect data
+        private struct BreakFragment
+        {
+            public int entityID;
+            public int fragmentIndex;
+            public Vector3 startPos;
+            public Vector3 velocity;
+            public float elapsed;
+            public float duration;
+            public float startScale;
+            public Quaternion baseRotation;
+        }
+        private readonly List<BreakFragment> breakFragments = new();
+        private const float breakGravity = -15f;
+        private const float breakDuration = 0.8f;
+        private const float breakSpreadForce = 3f;
+        private const float breakUpForce = 5f;
+
 
 
         public void MarkEntitiesDirty() => entitiesDirty = true;
@@ -124,14 +142,30 @@ namespace GameLogic
 
                 if (!tileAnimDone)
                 {
+                    // Only animate visible tiles — off-screen tiles snap to final state
                     bool allDone = true;
+                    float step = dt * speed;
                     for (int i = 0; i < tileCount; i++)
                     {
-                        if (tileAnim[i] >= 1f) continue;
-                        tileAnim[i] = Mathf.MoveTowards(tileAnim[i], 1f, dt * speed);
-                        float t = Mathf.Clamp01(tileAnim[i]);
-                        tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs * DOVirtual.EasedValue(0f, 1f, t, animEase));
-                        if (t < 1f) allDone = false;
+                        float a = tileAnim[i];
+                        if (a >= 1f) continue;
+                        a = Mathf.MoveTowards(a, 1f, step);
+                        tileAnim[i] = a;
+                        if (a < 1f)
+                        {
+                            allDone = false;
+                            // Only compute TRS for visible tiles
+                            int x = i / prevSz, z = i % prevSz;
+                            if (x >= visMinX && x <= visMaxX && z >= visMinZ && z <= visMaxZ)
+                            {
+                                float t = Mathf.Clamp01(a);
+                                tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs * DOVirtual.EasedValue(0f, 1f, t, animEase));
+                            }
+                        }
+                        else
+                        {
+                            tileMatrices[i] = Matrix4x4.TRS(tilePos[i], br, bs);
+                        }
                     }
                     if (allDone) { tileAnimDone = true; entitiesDirty = true; }
                 }
@@ -140,22 +174,29 @@ namespace GameLogic
                 DrawVisibleTiles(tileMesh, tileMaterials);
             }
 
-            // Animate walls
+            // Animate walls (only when visible — walls are at grid edges)
             if (wallMesh != null && wallMaterials?.Length > 0 && wallMatrices != null)
             {
                 if (!wallAnimDone) UpdateWalls(dt, speed, bs, br);
-                DrawInstanced(wallMesh, wallMaterials, wallMatrices, wallCount);
+                // Only draw walls if camera can see the grid edges
+                if (visMinX <= 0 || visMaxX >= SizeX - 1 || visMinZ <= 0 || visMaxZ >= SizeZ - 1)
+                    DrawInstanced(wallMesh, wallMaterials, wallMatrices, wallCount);
             }
 
-            // Animate corners
+            // Animate corners (only when visible)
             if (cornerMesh != null && cornerMaterials?.Length > 0 && cornerMatrices != null)
             {
                 if (!cornerAnimDone) UpdateCorners(dt, speed, bs, br);
-                DrawInstanced(cornerMesh, cornerMaterials, cornerMatrices, cornerCount);
+                if (visMinX <= 0 || visMaxX >= SizeX - 1 || visMinZ <= 0 || visMaxZ >= SizeZ - 1)
+                    DrawInstanced(cornerMesh, cornerMaterials, cornerMatrices, cornerCount);
             }
 
             // Draw entities from backend
             DrawEntities();
+
+            // Draw break fragments
+            if (breakFragments.Count > 0)
+                UpdateAndDrawBreakFragments(Time.deltaTime);
         }
 
         private void EnsureDrawBuffer(int minSize)
@@ -283,7 +324,7 @@ namespace GameLogic
 
                 foreach (var entity in GameGrid.I.entities)
                 {
-                    GridVisualData data = RendererDictionary.visualDataArray[entity.visualDataIndex];
+                    SharedEntityVisualData data = sharedDataDictionary.dataArray[entity.ID].sharedVisualData;
                     if (data.mesh == null || data.materials == null || data.materials.Length == 0) continue;
 
                     // Skip entities outside visible range
@@ -305,10 +346,10 @@ namespace GameLogic
                     Quaternion rot = Quaternion.Euler(data.rotation) * (data.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
                     Matrix4x4 matrix = Matrix4x4.TRS(worldPos, rot, scale * positionMultiplier);
 
-                    if (!entityGroups.TryGetValue(entity.visualDataIndex, out var list))
+                    if (!entityGroups.TryGetValue(entity.ID, out var list))
                     {
                         list = new List<Matrix4x4>();
-                        entityGroups[entity.visualDataIndex] = list;
+                        entityGroups[entity.ID] = list;
                     }
                     list.Add(matrix);
                 }
@@ -320,7 +361,7 @@ namespace GameLogic
             foreach (var kvp in entityGroups)
             {
                 if (kvp.Value.Count == 0) continue;
-                GridVisualData data = RendererDictionary.visualDataArray[kvp.Key];
+                SharedEntityVisualData data = sharedDataDictionary.dataArray[kvp.Key].sharedVisualData;
                 var matrices = kvp.Value;
 
                 EnsureDrawBuffer(matrices.Count);
@@ -328,6 +369,81 @@ namespace GameLogic
 
                 DrawInstanced(data.mesh, data.materials, drawBuffer, matrices.Count,
                     UnityEngine.Rendering.ShadowCastingMode.On);
+            }
+        }
+
+        public void SpawnBreakEffect(int entityID, Vector3 worldPos, float entityScale, Vector2Int gridPos)
+        {
+            if (!sharedDataDictionary.dataArray.TryGetValue(entityID, out var entityData)) return;
+            var splitMeshes = entityData.sharedVisualData.splitMeshes;
+            if (splitMeshes == null) return;
+
+            int count = splitMeshes.Length;
+            float angleStep = 360f / count;
+            var visData = entityData.sharedVisualData;
+            float hash = Mathf.Abs((Mathf.Sin(gridPos.x * 127.1f + gridPos.y * 311.7f) * 43758.5453f) % 1f);
+            Quaternion baseRot = Quaternion.Euler(visData.rotation) * (visData.randomRotation ? Quaternion.Euler(0, 0, hash * 360f) : Quaternion.identity);
+
+            for (int i = 0; i < count; i++)
+            {
+                float angle = (angleStep * i + Random.Range(-15f, 15f)) * Mathf.Deg2Rad;
+                Vector3 dir = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                Vector3 vel = dir * (breakSpreadForce + Random.Range(-0.5f, 0.5f))
+                            + Vector3.up * (breakUpForce + Random.Range(-1f, 1f));
+
+                breakFragments.Add(new BreakFragment
+                {
+                    entityID = entityID,
+                    fragmentIndex = i,
+                    startPos = worldPos,
+                    velocity = vel,
+                    elapsed = 0f,
+                    duration = breakDuration + Random.Range(-0.1f, 0.1f),
+                    startScale = entityScale * positionMultiplier,
+                    baseRotation = baseRot
+                });
+            }
+        }
+
+        private void UpdateAndDrawBreakFragments(float dt)
+        {
+            // Group fragment matrices by (entityID, fragmentIndex) for instanced drawing
+            // In practice, each fragment mesh is unique so we draw them individually
+            for (int i = breakFragments.Count - 1; i >= 0; i--)
+            {
+                var frag = breakFragments[i];
+                frag.elapsed += dt;
+
+                if (frag.elapsed >= frag.duration)
+                {
+                    breakFragments.RemoveAt(i);
+                    continue;
+                }
+
+                breakFragments[i] = frag;
+
+                float t = frag.elapsed;
+                float normalizedT = frag.elapsed / frag.duration;
+
+                // Parabolic arc: pos = start + vel*t + 0.5*gravity*t^2
+                Vector3 pos = frag.startPos + frag.velocity * t
+                            + Vector3.up * (0.5f * breakGravity * t * t);
+
+                // Scale down over lifetime
+                float scale = frag.startScale * (1f - normalizedT * normalizedT);
+
+                // Start at entity's base rotation, then tumble gently
+                Quaternion tumble = Quaternion.Euler(t * 40f * (frag.fragmentIndex % 3 == 0 ? 1 : -1),
+                                                     t * 60f,
+                                                     t * 30f * (frag.fragmentIndex % 2 == 0 ? 1 : -1));
+                Quaternion rot = tumble * frag.baseRotation;
+
+                var entityData = sharedDataDictionary.dataArray[frag.entityID];
+                Mesh fragMesh = entityData.sharedVisualData.splitMeshes[frag.fragmentIndex];
+                if (fragMesh == null || fragMesh.vertexCount == 0) continue;
+
+                drawBuffer[0] = Matrix4x4.TRS(pos, rot, Vector3.one * scale);
+                DrawInstanced(fragMesh, entityData.sharedVisualData.materials, drawBuffer, 1);
             }
         }
 

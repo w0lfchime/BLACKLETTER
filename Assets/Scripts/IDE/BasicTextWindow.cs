@@ -3,24 +3,37 @@ using UnityEngine;
 public class TextIDE : MonoBehaviour
 {
     public MeshFilter dragHandle;
+
+    [Header("Spring Damping")]
+    [SerializeField] private float springStiffness = 15f;
+    [SerializeField] private float springDamping = 8f;
     
     private bool isDragging = false;
     private Vector3 offset;
     private Camera mainCamera;
+    private Vector3 velocity;
+    private Vector3 targetPosition;
 
     void Start()
     {
         mainCamera = Camera.main;
+        targetPosition = transform.position;
     }
 
     void Update()
     {
+        // Match camera's X rotation
+        Vector3 euler = transform.eulerAngles;
+        euler.x = mainCamera.transform.eulerAngles.x;
+        transform.eulerAngles = euler;
+
         if (Input.GetMouseButtonDown(0))
         {
             if (IsMouseOverMesh())
             {
                 isDragging = true;
                 offset = transform.position - GetMouseWorldPosition();
+                velocity = Vector3.zero;
             }
         }
         
@@ -33,8 +46,14 @@ public class TextIDE : MonoBehaviour
         {
             Vector3 newPos = GetMouseWorldPosition() + offset;
             newPos.y = transform.position.y;
-            transform.position = newPos;
+            targetPosition = newPos;
         }
+
+        // Spring-damped movement
+        Vector3 displacement = targetPosition - transform.position;
+        Vector3 springForce = displacement * springStiffness - velocity * springDamping;
+        velocity += springForce * Time.deltaTime;
+        transform.position += velocity * Time.deltaTime;
     }
 
     bool IsMouseOverMesh()
