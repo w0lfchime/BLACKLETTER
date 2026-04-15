@@ -14,6 +14,9 @@ public class TextIDE : MonoBehaviour
     private Vector3 velocity;
     private Vector3 targetPosition;
 
+    public float baseScale = 10f;
+    public float scaleFactor = .1f;
+
     void Start()
     {
         mainCamera = Camera.main;
@@ -54,6 +57,12 @@ public class TextIDE : MonoBehaviour
         Vector3 springForce = displacement * springStiffness - velocity * springDamping;
         velocity += springForce * Time.deltaTime;
         transform.position += velocity * Time.deltaTime;
+
+        float distance = Vector3.Distance(mainCamera.transform.position, transform.position);
+        Vector3 scale = Vector3.one * (baseScale + distance * scaleFactor);
+        scale.z = .01f;
+        transform.localScale = scale;
+        
     }
 
     bool IsMouseOverMesh()

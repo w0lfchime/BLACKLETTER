@@ -24,7 +24,7 @@ public class Camera2 : MonoBehaviour
 
     private Vector3 pivotTargetPos;
     private float targetZoomDistance;
-    private float currentZoomDistance;
+    public float currentZoomDistance;
 
     private Quaternion baseCamLocalRot;
 
